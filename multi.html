@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmonix - Multiplayer Room</title>
+    
+    <script>
+        window.addEventListener('error', function(e) { console.error("System Error:", e.message); });
+    </script>
+
+    <script src="https://unpkg.com/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Serif:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- CSS Theme (Original) --- */
+        :root { 
+            --bg-app: #0F172A; --surface: #1E293B; --active-note: #FACC15; --voice-highlight: #38BDF8; --text-main: #F1F5F9; 
+            --success: #10B981; --accent: #C084FC; --border-color: #334155;
+            --shadow-dark: #020617; --shadow-success: #047857; --shadow-blue: #0369a1; --shadow-yellow: #b45309; --shadow-red: #b91c1c;
+        }
+        body { font-family: 'Sarabun'; background: var(--bg-app); margin: 0; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; color: var(--text-main); transition: box-shadow 0.3s; }
+        .hidden { display: none !important; }
+
+        @keyframes flashGlow { 0% { box-shadow: inset 0 0 0 0 transparent; } 50% { box-shadow: inset 0 0 60px 20px rgba(239, 68, 68, 0.6); } 100% { box-shadow: inset 0 0 0 0 transparent; } }
+        .urgent-mode { animation: flashGlow 1s infinite ease-in-out; }
+
+        /* Lobby UI */
+        .lobby-box { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .pin-container { background: rgba(0,0,0,0.3); padding: 10px 25px; border-radius: 16px; border: 2px solid var(--active-note); margin-bottom: 20px; display: inline-block; box-shadow: 0 0 20px rgba(250, 204, 21, 0.1); }
+        .pin-label { color: #94A3B8; font-size: 0.8rem; font-weight: bold; letter-spacing: 2px; }
+        .pin-box { font-size: 3rem; font-weight: 900; color: var(--active-note); letter-spacing: 6px; line-height: 1; }
+        
+        .p-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; max-width: 600px; margin-bottom: 30px; min-height: 50px; }
+        .p-badge { display: inline-flex; align-items: center; gap: 8px; background: #334155; padding: 6px 15px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        .btn-big { background: var(--voice-highlight); color: #0F172A; padding: 15px 40px; font-size: 1.2rem; border-radius: 15px; font-weight: 800; border: none; cursor: pointer; width: 100%; max-width: 250px; margin: 8px; transition: 0.1s; box-shadow: 0 6px 0 var(--shadow-blue); text-decoration: none; display: inline-flex; justify-content: center; }
+        .btn-big:active { transform: translateY(6px); box-shadow: none; }
+        .btn-big.btn-outline { background: #1e293b; border: 2px solid #334155; color: #94A3B8; box-shadow: 0 6px 0 #0f172a; }
+        .btn-big.btn-outline:active { transform: translateY(6px); box-shadow: none; }
+        .input-pin { background: var(--surface); border: 2px solid #334155; color: white; padding: 15px; font-size: 1.5rem; text-align: center; border-radius: 15px; width: 200px; margin-bottom: 20px; font-weight: bold; }
+
+        /* Game UI */
+        #top-area { flex-shrink: 0; background: var(--surface); z-index: 20; border-bottom: 1px solid var(--border-color); }
+        #timer-bar-fill { width: 100%; height: 6px; background: #34D399; transition: width 0.1s linear; }
+        #nav-bar { height: 60px; padding: 0 15px; display: grid; grid-template-columns: 80px 1fr auto; align-items: center; }
+        .back-btn { text-decoration: none; font-weight: 700; color: #94A3B8; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; justify-self: start; padding: 8px; border-radius: 8px; }
+        .back-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+        .stats-center { display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .score-val { font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--active-note); font-weight: 800; text-shadow: 0 0 10px rgba(250,204,21,0.3); }
+        .diff-tag { font-size: 0.7rem; font-weight: 800; padding: 4px 8px; border-radius: 6px; background: #334155; color: #94A3B8; text-transform: uppercase; }
+        
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .icon-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .user-profile { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px 12px 4px 4px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        .u-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--active-note); }
+
+        #score-area { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at center, #263346 0%, #0F172A 100%); }
+        #vexflow-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        #vexflow-out { width: 100%; display:flex; justify-content:center; filter: invert(100%) opacity(0.9) drop-shadow(0 0 2px rgba(255,255,255,0.2)); }
+
+        #control-panel { flex-shrink: 0; background: #162032; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; padding-bottom: max(15px, env(safe-area-inset-bottom)); z-index: 50; }
+        .info-bar { padding: 0 15px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .target-val { font-size: 1.1rem; font-weight: 800; color: #38BDF8; font-family: 'Noto Serif', serif; }
+        .submit-btn { background: var(--success); color: #064E3B; border: none; padding: 0 20px; height: 36px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; transition: 0.1s; box-shadow: 0 4px 0 var(--shadow-success); }
+        .submit-btn:active { transform: translateY(4px); box-shadow: none; }
+        .controls-grid { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .voice-row { display: flex; gap: 6px; width: 100%; }
+        .btn-v { flex: 1; background: #334155; border: none; padding: 8px 0; border-radius: 8px; color: #94A3B8; font-weight: 800; font-size: 0.8rem; cursor: pointer; transition: 0.1s; text-transform: uppercase; box-shadow: 0 3px 0 var(--shadow-dark); }
+        .btn-v:active { transform: translateY(3px); box-shadow: none; }
+        .btn-v.selected { background: var(--active-note); color: #0F172A; box-shadow: 0 3px 0 var(--shadow-yellow); transform: translateY(0); }
+        .btn-v.selected:active { transform: translateY(3px); box-shadow: none; }
+        .btn-v.locked { opacity: 0.3; pointer-events: none; background: #1E293B; box-shadow: none; }
+        .note-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .btn-n { background: #1e293b; border: 1px solid #334155; padding: 0; border-radius: 10px; color: white; font-size: 1.2rem; font-weight: 800; cursor: pointer; height: 45px; transition: 0.1s; box-shadow: 0 4px 0 var(--shadow-dark); }
+        .btn-n:active { transform: translateY(4px); box-shadow: none; }
+        .btn-n.active { background: var(--accent); color: white; border: none; box-shadow: 0 4px 0 var(--shadow-purple); }
+        .btn-n.active:active { transform: translateY(4px); box-shadow: none; }
+        .tool-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+        .btn-tool { background: #334155; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; height: 38px; font-size: 0.9rem; transition: 0.1s; box-shadow: 0 3px 0 var(--shadow-dark); }
+        .btn-tool:active { transform: translateY(3px); box-shadow: none; }
+        .btn-undo { background: #EF4444; box-shadow: 0 3px 0 #991b1b; }
+        
+        /* Host Settings */
+        .diff-btn { width: 30%; padding: 10px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; color: #0F172A; margin: 0 5px; opacity: 0.6; transition: 0.1s; box-shadow: 0 4px 0 var(--shadow-dark); }
+        .diff-btn.active { opacity: 1; transform: translateY(0); }
+        .btn-green { background: #34D399; box-shadow: 0 4px 0 #047857; }
+        .btn-yellow { background: #FACC15; box-shadow: 0 4px 0 #ca8a04; }
+        .btn-red { background: #F43F5E; box-shadow: 0 4px 0 #be123c; }
+        .setting-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: left; }
+        .setting-label { font-size: 0.9rem; color: #94A3B8; margin-bottom: 5px; display: block; font-weight: bold; }
+        .custom-select { width: 100%; padding: 10px; border-radius: 8px; background: #1E293B; color: white; border: 1px solid #334155; font-size: 1rem; font-weight: bold; }
+
+        /* Overlays */
+        #summary-overlay, #friends-overlay, #player-overlay { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(8px); padding: 20px; }
+        #waiting-overlay { position: absolute; inset: 0; background: rgba(15,23,42,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(5px); }
+        
+        .bar-chart { display: flex; gap: 40px; align-items: flex-end; height: 120px; margin-bottom: 30px; }
+        .bar { width: 60px; background: #334155; border-radius: 8px 8px 0 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; transition: height 0.5s; position: relative; }
+        .bar-val { font-weight: bold; margin-bottom: 5px; color: white; font-size:1.2rem; }
+        .bar-label { position: absolute; bottom: -30px; font-size: 1rem; color: #94A3B8; font-weight: bold; }
+        .bar.correct { background: #34D399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
+        .bar.wrong { background: #F43F5E; box-shadow: 0 0 15px rgba(244, 63, 94, 0.4); }
+        .loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: var(--active-note); border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; margin-bottom: 15px; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .rank-row { display: flex; justify-content: space-between; align-items: center; width: 100%; background: #334155; padding: 10px 15px; border-radius: 12px; margin-bottom: 5px; box-sizing: border-box; cursor: pointer; transition: 0.1s; }
+        .rank-row:active { transform: scale(0.98); background: #475569; }
+        .podium-box { display: flex; align-items: flex-end; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .pod-step { width: 80px; border-radius: 10px 10px 0 0; display: flex; flex-direction: column; align-items: center; padding: 10px; color: #0F172A; font-weight: bold; text-align: center; }
+        .pod-1 { height: 180px; background: #FACC15; z-index: 2; box-shadow: 0 0 20px rgba(250,204,21,0.5); }
+        .pod-2 { height: 140px; background: #94A3B8; }
+        .pod-3 { height: 100px; background: #B45309; color: #FFFBEB; }
+        .pod-avatar { width: 50px; height: 50px; border-radius: 50%; border: 3px solid white; margin-bottom: 5px; background:#000; }
+
+        /* Decorated Friends UI */
+        .friend-list-panel { background: #1E293B; width: 90%; max-width: 380px; padding: 25px; border-radius: 20px; border: 2px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .friend-card { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 8px; transition: 0.2s; }
+        .friend-card:hover { background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); }
+        .f-avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #475569; }
+        .f-info { flex: 1; }
+        .f-name { color: white; font-weight: bold; font-size: 0.95rem; }
+        .btn-invite { background: transparent; border: 1px solid var(--voice-highlight); color: var(--voice-highlight); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-invite:hover { background: var(--voice-highlight); color: #0F172A; }
+        .btn-invite:active { transform: scale(0.95); }
+        
+        /* Intro Loader for Auto-Join */
+        #intro-loader { position: fixed; inset: 0; background: #0F172A; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .loading-text { margin-top: 15px; color: #FACC15; font-family: 'Sarabun'; animation: pulse 1s infinite; }
+    </style>
+</head>
+<body>
+
+    <div id="intro-loader">
+        <span class="loader"></span>
+        <div class="loading-text">กำลังเชื่อมต่อ...</div>
+    </div>
+
+    <div id="join-screen" class="lobby-box hidden">
+        <h2 style="color:white;">ใส่รหัสห้อง</h2>
+        <input type="number" id="room-pin" class="input-pin" placeholder="123456">
+        <button id="btn-join-action" class="btn-big" onclick="playSfx('click'); joinRoom()">เข้าห้อง</button>
+        <a href="online_hub.html" class="btn-big btn-outline" style="text-decoration:none; line-height:50px; box-sizing:border-box;" onclick="playSfx('click')">ยกเลิก</a>
+    </div>
+
+    <div id="lobby-screen" class="lobby-box hidden">
+        <div style="width:100%; display:flex; justify-content:space-between; align-items:flex-start; padding:0 10px;">
+            <div style="text-align:left;">
+                <div class="pin-container">
+                    <div class="pin-label">ROOM PIN</div>
+                    <div class="pin-box" id="pin-disp">...</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="icon-btn" onclick="playSfx('click'); openFriends()"><i class="fa-solid fa-user-plus"></i></div>
+            </div>
+        </div>
+        
+        <div style="margin:10px 0 20px; font-weight:bold; color:#94A3B8; font-size:0.9rem;">ผู้เล่นในห้อง (รอเพื่อน...)</div>
+        <div class="p-list" id="player-list"></div>
+        
+        <div id="host-controls" class="hidden" style="width:100%; max-width:400px;">
+            <div class="setting-box">
+                <label class="setting-label"><i class="fa-solid fa-layer-group"></i> ความยาก</label>
+                <div style="display:flex; justify-content:center;">
+                    <button id="btn-easy" class="diff-btn btn-green active" onclick="playSfx('click'); setDiff('easy')">Easy</button>
+                    <button id="btn-norm" class="diff-btn btn-yellow" onclick="playSfx('click'); setDiff('medium')">Normal</button>
+                    <button id="btn-hard" class="diff-btn btn-red" onclick="playSfx('click'); setDiff('hard')">Hard</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="setting-box" style="flex:1;">
+                    <label class="setting-label"><i class="fa-solid fa-clock"></i> เวลาต่อข้อ</label>
+                    <select id="sel-time" class="custom-select" onchange="playSfx('click'); updateSettings()">
+                        <option value="10">10 วินาที</option>
+                        <option value="15">15 วินาที</option>
+                        <option value="20">20 วินาที</option>
+                        <option value="25">25 วินาที</option>
+                        <option value="30" selected>30 วินาที</option>
+                    </select>
+                </div>
+                <div class="setting-box" style="flex:1;">
+                    <label class="setting-label"><i class="fa-solid fa-list-ol"></i> จำนวนข้อ</label>
+                    <select id="sel-round" class="custom-select" onchange="playSfx('click'); updateSettings()">
+                        <option value="5">5 ข้อ</option>
+                        <option value="10" selected>10 ข้อ</option>
+                        <option value="15">15 ข้อ</option>
+                        <option value="20">20 ข้อ</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-big" style="background:#38BDF8; color:#0F172A; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);" onclick="playSfx('start'); startGameHost()">เริ่มเกม!</button>
+        </div>
+        
+        <div id="client-wait" class="hidden" style="color:#FACC15; animation:pulse 1s infinite; margin-top:30px;">
+            <i class="fa-solid fa-hourglass-half" style="font-size:2rem; margin-bottom:10px;"></i><br>
+            รอหัวหน้าห้องเริ่มเกม...<br>
+            <div style="margin-top:10px; background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                <span id="client-diff-disp" style="font-size:0.8rem; color:#94A3B8; margin-right:10px;"></span>
+                <span id="client-setting-disp" style="font-size:0.8rem; color:#94A3B8;"></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="friends-overlay" class="hidden">
+        <div class="friend-list-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:white; font-size:1.3rem;"><i class="fa-solid fa-users"></i> เชิญเพื่อน</h3>
+                <button onclick="document.getElementById('friends-overlay').classList.add('hidden')" style="background:none; border:none; color:#94A3B8; cursor:pointer;"><i class="fa-solid fa-xmark fa-lg"></i></button>
+            </div>
+            <div id="friend-list-container" style="max-height:300px; overflow-y:auto; padding-right:5px;"></div>
+        </div>
+    </div>
+
+    <div id="player-overlay" class="hidden">
+        <div style="background:#1E293B; width:280px; padding:20px; border-radius:16px; text-align:center; border:1px solid #334155;">
+            <img id="p-modal-img" src="" style="width:60px; height:60px; border-radius:50%; margin-bottom:10px;">
+            <h3 id="p-modal-name" style="margin:0 0 20px; color:white;"></h3>
+            <button class="btn-big" style="width:100%; font-size:1rem; padding:10px;" onclick="playSfx('click'); addFriendAction()">เพิ่มเพื่อน</button>
+            <button class="btn-big btn-outline" style="width:100%; font-size:1rem; padding:10px; margin-top:5px;" onclick="playSfx('click'); document.getElementById('player-overlay').classList.add('hidden')">ปิด</button>
+        </div>
+    </div>
+
+    <div id="game-ui" class="hidden" style="height:100%; display:flex; flex-direction:column; position:relative;">
+        <div id="waiting-overlay" class="hidden">
+            <span class="loader"></span>
+            <h2 style="color:#FACC15; margin:0;">รอเพื่อน...</h2>
+            <p style="color:#94A3B8;">คำตอบถูกส่งแล้ว</p>
+        </div>
+
+        <div id="summary-overlay" class="hidden">
+            <h1 id="sum-title" style="color:white; margin:0 0 5px 0; font-size:2rem;">หมดเวลา!</h1>
+            <p style="color:#94A3B8; font-size:1rem; margin:0 0 10px 0;">เฉลย: <span id="ans-reveal" style="color:#38BDF8; font-weight:bold;">-</span></p>
+            <div id="summary-vex-container"><div id="summary-vex-out"></div></div>
+            <div class="bar-chart">
+                <div class="bar correct" id="bar-correct"><div class="bar-val" id="val-correct">0</div><div class="bar-label">ถูก</div></div>
+                <div class="bar wrong" id="bar-wrong"><div class="bar-val" id="val-wrong">0</div><div class="bar-label">ผิด</div></div>
+            </div>
+            <div id="host-next-btn" class="hidden">
+                <button class="btn-big" onclick="playSfx('click'); nextQuestionHost()" style="width:200px;">ข้อถัดไป <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+            <div id="client-wait-next" class="hidden" style="color:#FACC15; animation:pulse 1s infinite;">
+                รอหัวหน้าห้องไปข้อต่อไป...
+            </div>
+        </div>
+
+        <div id="top-area">
+            <div id="timer-bar-fill"></div>
+            <div id="nav-bar">
+                <a href="online_hub.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i> ออก</a>
+                <div class="stats-center">
+                    <div id="score-disp" class="score-val">0</div>
+                    <div id="diff-disp" class="diff-tag">EASY</div>
+                </div>
+                <div class="header-actions">
+                    <div class="user-profile">
+                        <span id="u-name" style="font-size:0.8rem; font-weight:bold;">Player</span>
+                        <img src="" class="u-avatar" id="u-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="score-area"><div id="vexflow-wrapper"><div id="vexflow-out"></div></div></div>
+        <div id="control-panel">
+            <div class="info-bar">
+                <div><div style="font-size:0.65rem; color:#94A3B8;">TARGET</div><div class="target-val" id="target-desc">-</div></div>
+                <button class="submit-btn" onclick="submitAnswer()">ส่งคำตอบ <i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+            <div class="controls-grid">
+                <div class="voice-row"><button class="btn-v" id="v-s">Soprano</button><button class="btn-v" id="v-a">Alto</button><button class="btn-v" id="v-t">Tenor</button><button class="btn-v" id="v-b">Bass</button></div>
+                <div class="note-row"><button class="btn-n" onclick="playToneNote('c'); setNote('c')" id="n-c">C</button><button class="btn-n" onclick="playToneNote('d'); setNote('d')" id="n-d">D</button><button class="btn-n" onclick="playToneNote('e'); setNote('e')" id="n-e">E</button><button class="btn-n" onclick="playToneNote('f'); setNote('f')" id="n-f">F</button><button class="btn-n" onclick="playToneNote('g'); setNote('g')" id="n-g">G</button><button class="btn-n" onclick="playToneNote('a'); setNote('a')" id="n-a">A</button><button class="btn-n" onclick="playToneNote('b'); setNote('b')" id="n-b">B</button></div>
+                <div class="tool-row">
+                    <button class="btn-tool acc-text" onclick="playSfx('click'); setAcc('#')" style="color:#FACC15">♯</button><button class="btn-tool acc-text" onclick="playSfx('click'); setAcc('n')">♮</button><button class="btn-tool acc-text" onclick="playSfx('click'); setAcc('b')" style="color:#C084FC">♭</button>
+                    <button class="btn-tool" onclick="playSfx('click'); shiftOctave(1)">Oct+</button><button class="btn-tool" onclick="playSfx('click'); shiftOctave(-1)">Oct-</button><button class="btn-tool btn-undo" onclick="playSfx('click'); undo()"><i class="fa-solid fa-rotate-left"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="rank-screen" class="lobby-box hidden" style="background:#0F172A; z-index:100; position:fixed; inset:0; padding: 20px;">
+        <h1 style="color:#FACC15; font-size:2.5rem; text-shadow: 0 0 20px rgba(250,204,21,0.5);">PODIUM</h1>
+        <div id="podium-display" class="podium-box"></div>
+        <div id="final-list" style="width:100%; max-width:400px; margin-bottom:20px; overflow-y:auto; max-height:40%;"></div>
+        <button class="btn-big" onclick="playSfx('click'); location.reload()">เล่นอีกครั้ง</button>
+        <button class="btn-big btn-outline" onclick="playSfx('click'); window.location.href='index.html'">กลับหน้าหลัก</button>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc, arrayUnion, addDoc, collection, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff", measurementId: "G-JHVY16ZDHY" };
+    
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    let currentUser = null;
+
+    // ดึงค่าจาก URL มารอไว้ก่อนเลย
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    const roomParam = urlParams.get('room');
+
+    // --- AUTO START LOGIC ---
+    auth.onAuthStateChanged(u => {
+        if(u) { 
+            currentUser = u;
+            document.getElementById('u-name').innerText = u.displayName || "Player"; 
+            document.getElementById('u-img').src = u.photoURL || "https://api.dicebear.com/7.x/fun-emoji/svg?seed=Guest";
+            
+            if (mode === 'host') {
+                document.getElementById('intro-loader').classList.add('hidden');
+                createRoom(); 
+            } else if (mode === 'join') {
+                if (roomParam) {
+                    // ถ้ามีรหัสห้องมากับลิงก์ ให้ขึ้นสถานะและจอยเลย
+                    document.querySelector('#intro-loader .loading-text').innerText = "กำลังเข้าร่วมห้อง...";
+                    joinRoom(roomParam); 
+                } else {
+                    // ถ้าไม่มีรหัสห้อง ปิด Loader แล้วโชว์หน้ากรอกรหัสปกติ
+                    document.getElementById('intro-loader').classList.add('hidden');
+                    showJoin(); 
+                }
+            } else {
+                // กรณีเข้ามาเฉยๆ ไม่มี mode
+                document.getElementById('intro-loader').classList.add('hidden');
+            }
+        } else {
+            // ถ้ายังไม่ล็อกอิน ดีดไปหน้าแรก
+            window.location.href='index.html';
+        }
+    });
+
+    // --- AUDIO SYSTEM ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const SFX = {
+        click: new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"),
+        correct: new Audio("https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"),
+        wrong: new Audio("https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3"),
+        start: new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"),
+        win: new Audio("https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3")
+    };
+    Object.values(SFX).forEach(s => { s.volume = 0.5; s.load(); });
+    window.playSfx = (type) => { try { if(SFX[type]){ SFX[type].currentTime=0; SFX[type].play().catch(()=>{}); } } catch(e){} };
+
+    const NOTE_FREQS = { 'c': 261.63, 'c#': 277.18, 'db': 277.18, 'd': 293.66, 'd#': 311.13, 'eb': 311.13, 'e': 329.63, 'f': 349.23, 'f#': 369.99, 'gb': 369.99, 'g': 392.00, 'g#': 415.30, 'ab': 415.30, 'a': 440.00, 'a#': 466.16, 'bb': 466.16, 'b': 493.88 };
+    window.playToneNote = (noteName) => { try { if(audioCtx.state === 'suspended') audioCtx.resume(); const n = scoreData[0].beats[0][curV]; let freq = NOTE_FREQS[noteName.toLowerCase()] || 440; const octDiff = n.o - 4; freq = freq * Math.pow(2, octDiff); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5); osc.stop(audioCtx.currentTime + 0.5); } catch(e) {} };
+
+    // --- GAME CONSTANTS ---
+    const QUEST_BANK = [
+        { k:'C', n:'C Major (I)', m:'s', s:{n:'c',o:5}, a:{n:'g',o:4}, t:{n:'e',o:4}, b:{n:'c',o:4}, diff:'easy' },
+        { k:'C', n:'F Major (IV)', m:'a', s:{n:'c',o:5}, a:{n:'a',o:4}, t:{n:'f',o:4}, b:{n:'f',o:3}, diff:'easy' },
+        { k:'C', n:'G Major (V)', m:'t', s:{n:'b',o:4}, a:{n:'g',o:4}, t:{n:'d',o:4}, b:{n:'g',o:3}, diff:'easy' },
+        { k:'G', n:'G Major (I)', m:'s', s:{n:'g',o:4}, a:{n:'d',o:4}, t:{n:'b',o:3}, b:{n:'g',o:3}, diff:'easy' },
+        { k:'G', n:'Em (vi)', m:'s', s:{n:'g',o:4}, a:{n:'e',o:4}, t:{n:'b',o:3}, b:{n:'e',o:3}, diff:'easy' },
+        { k:'F', n:'F Major (I)', m:'b', s:{n:'c',o:5}, a:{n:'a',o:4}, t:{n:'f',o:4}, b:{n:'f',o:3}, diff:'easy' },
+        { k:'F', n:'Bb Major (IV)', m:'a', s:{n:'d',o:5}, a:{n:'bb',o:4}, t:{n:'f',o:4}, b:{n:'bb',o:3}, diff:'easy' },
+        { k:'D', n:'D Major (I)', m:'s', s:{n:'f',o:4,acc:'#'}, a:{n:'d',o:4}, t:{n:'a',o:3}, b:{n:'d',o:3}, diff:'easy' },
+        { k:'A', n:'A Major (I)', m:'s', s:{n:'c',o:5,acc:'#'}, a:{n:'a',o:4}, t:{n:'e',o:4}, b:{n:'a',o:3}, diff:'medium' },
+        { k:'Eb', n:'Eb Major (I)', m:'s', s:{n:'g',o:4}, a:{n:'eb',o:4}, t:{n:'bb',o:3}, b:{n:'eb',o:3}, diff:'medium' },
+        { k:'C', n:'C Major (I6)', m:'b', s:{n:'g',o:4}, a:{n:'e',o:4}, t:{n:'c',o:4}, b:{n:'e',o:3}, fig:'6', diff:'medium' },
+        { k:'G', n:'G Major (I6)', m:'b', s:{n:'d',o:5}, a:{n:'b',o:4}, t:{n:'g',o:4}, b:{n:'b',o:3}, fig:'6', diff:'medium' },
+        { k:'E', n:'E Major (I)', m:'s', s:{n:'g',o:4,acc:'#'}, a:{n:'e',o:4}, t:{n:'b',o:3}, b:{n:'e',o:3}, diff:'medium' },
+        { k:'Ab', n:'Ab Major (I)', m:'t', s:{n:'c',o:5}, a:{n:'ab',o:4}, t:{n:'eb',o:4}, b:{n:'ab',o:3}, diff:'medium' },
+        { k:'C', n:'C Major (I6/4)', m:'b', s:{n:'e',o:5}, a:{n:'c',o:5}, t:{n:'g',o:4}, b:{n:'g',o:3}, fig:'6,4', diff:'hard' },
+        { k:'C', n:'G7 (V7)', m:'a', s:{n:'f',o:4}, a:{n:'d',o:4}, t:{n:'b',o:3}, b:{n:'g',o:3}, fig:'7', diff:'hard' },
+        { k:'G', n:'D7 (V7)', m:'s', s:{n:'c',o:5}, a:{n:'a',o:4}, t:{n:'f',o:4,acc:'#'}, b:{n:'d',o:3}, fig:'7', diff:'hard' },
+        { k:'C', n:'Bdim (vii°)', m:'s', s:{n:'d',o:5}, a:{n:'b',o:4}, t:{n:'f',o:4}, b:{n:'b',o:3}, fig:'', diff:'hard' },
+        { k:'B', n:'B Major (I)', m:'s', s:{n:'d',o:5,acc:'#'}, a:{n:'b',o:4}, t:{n:'f',o:4,acc:'#'}, b:{n:'b',o:3}, diff:'hard' },
+        { k:'Db', n:'Db Major (I)', m:'b', s:{n:'f',o:4}, a:{n:'db',o:4}, t:{n:'ab',o:3}, b:{n:'db',o:3}, diff:'hard' },
+        { k:'Cm', n:'G7 (V7)', m:'t', s:{n:'f',o:4}, a:{n:'d',o:4}, t:{n:'b',o:3,acc:'n'}, b:{n:'g',o:3}, fig:'7', diff:'hard' }
+    ];
+
+    const KEY_SIGS = { 'C': {}, 'G': {f:'#'}, 'D': {f:'#',c:'#'}, 'A': {f:'#',c:'#',g:'#'}, 'E': {f:'#',c:'#',g:'#',d:'#'}, 'F': {b:'b'}, 'Bb': {b:'b',e:'b'}, 'Eb': {b:'b',e:'b',a:'b'}, 'Ab': {b:'b',e:'b',a:'b',d:'b'}, 'Db': {b:'b',e:'b',a:'b',d:'b',g:'b'}, 'B': {f:'#',c:'#',g:'#',d:'#',a:'#'}, 'F#': {f:'#',c:'#',g:'#',d:'#',a:'#',e:'#'} };
+    const DIFF_SETTINGS = { 'easy': { color:'#34D399', mult:1 }, 'medium': { color:'#FACC15', mult:1.5 }, 'hard': { color:'#F43F5E', mult:2 } };
+
+    let roomId=null, isHost=false, score=0;
+    let isGameRunning = false; 
+    let selectedDiff = 'easy';
+    let gameSettings = { time: 30, rounds: 10 }; // Default settings
+    
+    let curV='s', missingVoice='s', targetSolution=null, currentKey='C';
+    let historyStack=[];
+    let scoreData=[{key:'C', beats:[{s:{n:'c',o:5,acc:''}, a:{n:'g',o:4,acc:''}, t:{n:'e',o:4,acc:''}, b:{n:'c',o:3,acc:''}}] }];
+    let hasAnswered = false;
+    let roundStartTime = 0;
+    let selectedPlayer = null; 
+
+    // --- FRIENDS & PLAYER ACTIONS ---
+    window.handlePlayerClick = (pData) => {
+        if(pData.uid === currentUser.uid) return; 
+        selectedPlayer = pData;
+        document.getElementById('p-modal-img').src = pData.avatar;
+        document.getElementById('p-modal-name').innerText = pData.name;
+        document.getElementById('player-overlay').classList.remove('hidden');
+    };
+
+    window.addFriendAction = async () => {
+        if(!selectedPlayer) return;
+        try {
+            await updateDoc(doc(db, "users", currentUser.uid), {
+                friends: arrayUnion({ uid: selectedPlayer.uid, name: selectedPlayer.name, avatar: selectedPlayer.avatar })
+            });
+            alert(`เพิ่ม ${selectedPlayer.name} เป็นเพื่อนแล้ว!`);
+            document.getElementById('player-overlay').classList.add('hidden');
+        } catch(e) { alert("เกิดข้อผิดพลาด"); }
+    };
+
+    window.inviteFriend = async (friend) => {
+        if(!roomId) return alert("สร้างห้องก่อนนะ");
+        try {
+            await addDoc(collection(db, `users/${friend.uid}/notifications`), {
+                type: 'invite',
+                fromName: currentUser.displayName,
+                fromUid: currentUser.uid,
+                roomId: roomId,
+                timestamp: serverTimestamp()
+            });
+            alert(`ส่งคำเชิญให้ ${friend.name} แล้ว!`);
+        } catch(e) { alert("ส่งคำเชิญไม่สำเร็จ"); }
+    };
+
+    window.openFriends = async () => {
+        document.getElementById('friends-overlay').classList.remove('hidden');
+        const list = document.getElementById('friend-list-container');
+        list.innerHTML = `<div style="text-align:center; margin-top:20px; color:#94A3B8;">กำลังโหลด...</div>`;
+        
+        try {
+            const docSnap = await getDoc(doc(db, "users", currentUser.uid));
+            if(docSnap.exists() && docSnap.data().friends && docSnap.data().friends.length > 0) {
+                const friends = docSnap.data().friends;
+                list.innerHTML = "";
+                friends.forEach(f => {
+                    const card = document.createElement('div');
+                    card.className = 'friend-card';
+                    card.innerHTML = `
+                        <img src="${f.avatar}" class="f-avatar">
+                        <div class="f-info">
+                            <div class="f-name">${f.name}</div>
+                        </div>
+                        <button class="btn-invite">เชิญ</button>
+                    `;
+                    card.querySelector('button').onclick = () => { playSfx('click'); inviteFriend(f); };
+                    list.appendChild(card);
+                });
+            } else {
+                list.innerHTML = `<div style="text-align:center; margin-top:30px; color:#64748B;">ยังไม่มีเพื่อน</div>`;
+            }
+        } catch(e) { list.innerHTML = "เกิดข้อผิดพลาด"; }
+    };
+
+    // --- ROOM LOGIC ---
+    window.createRoom = async () => {
+        try {
+            roomId = Math.floor(100000+Math.random()*900000).toString();
+            isHost=true;
+            await setDoc(doc(db,"rooms",roomId), { 
+                host:currentUser.uid, status:'waiting', difficulty:'easy', qIndex:0, roundResults:{},
+                players:{[currentUser.uid]:{name:currentUser.displayName, avatar:currentUser.photoURL, score:0, uid:currentUser.uid}}, endTime:0,
+                settings: gameSettings
+            });
+            document.getElementById('intro-loader').classList.add('hidden');
+            enterLobby();
+        } catch(e) { 
+            alert("Error: "+e.message); 
+            document.getElementById('intro-loader').classList.add('hidden');
+        }
+    };
+
+    window.joinRoom = async (forceId = null) => {
+        // ใช้ forceId ถ้ามี ถ้าไม่มีให้เอาจาก input
+        roomId = forceId || document.getElementById('room-pin').value;
+        if (!roomId) return alert("กรุณาใส่รหัสห้อง");
+        
+        // ลบช่องว่างเผื่อ copy มาผิด
+        roomId = roomId.toString().trim();
+
+        try {
+            const ref = doc(db,"rooms",roomId);
+            const snap = await getDoc(ref);
+            
+            if(snap.exists() && snap.data().status==='waiting') {
+                const data = snap.data();
+                
+                // ตรวจสอบว่าเราเป็น Host หรือไม่ (ป้องกันกรณี Host กด Join ลิงก์ตัวเอง)
+                if (data.host === currentUser.uid) {
+                    isHost = true;
+                } else {
+                    isHost = false;
+                }
+
+                // อัปเดตข้อมูลผู้เล่นในห้อง
+                await updateDoc(ref, { 
+                    [`players.${currentUser.uid}`]: {
+                        name: currentUser.displayName, 
+                        avatar: currentUser.photoURL, 
+                        score: 0, 
+                        uid: currentUser.uid
+                    } 
+                });
+
+                // ** สำคัญ: เข้าห้องสำเร็จแล้วค่อยปิด Loader **
+                document.getElementById('intro-loader').classList.add('hidden');
+                enterLobby();
+            } else { 
+                throw new Error("ไม่พบห้อง หรือห้องเริ่มเล่นไปแล้ว"); 
+            }
+        } catch(e) { 
+            // ถ้า Error ให้แจ้งเตือน แล้วค่อยดีดกลับไปหน้าใส่รหัส
+            alert("เข้าร่วมไม่ได้: " + e.message); 
+            document.getElementById('intro-loader').classList.add('hidden');
+            document.getElementById('join-screen').classList.remove('hidden');
+        }
+    };
+
+    window.showJoin = () => { document.getElementById('join-screen').classList.remove('hidden'); };
+
+    function enterLobby() {
+        document.getElementById('join-screen').classList.add('hidden');
+        document.getElementById('lobby-screen').classList.remove('hidden');
+        document.getElementById('pin-disp').innerText = roomId;
+        
+        // เช็คอีกทีว่าเป็น Host ไหม เพื่อโชว์ปุ่มตั้งค่า
+        if(isHost) document.getElementById('host-controls').classList.remove('hidden');
+        else document.getElementById('client-wait').classList.remove('hidden');
+
+        onSnapshot(doc(db,"rooms",roomId), (snap) => {
+            if(!snap.exists()) return;
+            const data = snap.data();
+            selectedDiff = data.difficulty;
+            
+            if(data.settings) gameSettings = data.settings;
+            else gameSettings = { time:30, rounds:10 };
+
+            if(!isHost) {
+                const diffEl = document.getElementById('client-diff-disp');
+                if(diffEl) diffEl.innerText = `Diff: ${selectedDiff.toUpperCase()}`;
+                const setEl = document.getElementById('client-setting-disp');
+                if(setEl) setEl.innerText = `เวลา: ${gameSettings.time}วิ | จำนวน: ${gameSettings.rounds}ข้อ`;
+            }
+            
+            const list = document.getElementById('player-list');
+            list.innerHTML = '';
+            if(data.players) {
+                Object.values(data.players).forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = "p-badge";
+                    div.innerHTML = `<img src="${p.avatar}" style="width:24px; height:24px; border-radius:50%; border:1px solid #FACC15;"> ${p.name}`;
+                    div.onclick = () => handlePlayerClick(p);
+                    list.appendChild(div);
+                });
+            }
+
+            if(data.status==='playing') {
+                try {
+                    document.getElementById('lobby-screen').classList.add('hidden');
+                    document.getElementById('game-ui').classList.remove('hidden');
+                    document.getElementById('summary-overlay').classList.add('hidden');
+                } catch(e) {}
+                
+                if(!isGameRunning || (window.lastQIndex !== data.qIndex)) {
+                     isGameRunning = true;
+                     window.lastQIndex = data.qIndex;
+                     hasAnswered = false;
+                     document.getElementById('waiting-overlay').classList.add('hidden');
+                     document.body.classList.remove('urgent-mode');
+                     
+                     startTimer(data.endTime);
+                     roundStartTime = Date.now();
+                     playSfx('start'); 
+                     setTimeout(() => loadPuzzleFromBank(data.qIndex || 0), 100);
+                }
+            }
+            else if(data.status==='summary') {
+                showSummary(data.roundResults, data.qIndex);
+            }
+            else if(data.status==='finished') {
+                showRankings(data.players);
+            }
+        });
+    }
+
+    // Host updates settings
+    window.updateSettings = async () => {
+        if(!isHost || !roomId) return;
+        const time = parseInt(document.getElementById('sel-time').value) || 30;
+        const rounds = parseInt(document.getElementById('sel-round').value) || 10;
+        gameSettings = { time, rounds };
+        await updateDoc(doc(db,"rooms",roomId), { settings: gameSettings });
+    };
+
+    window.setDiff = async (d) => {
+        selectedDiff = d;
+        await updateDoc(doc(db,"rooms",roomId), { difficulty:d });
+        document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+        const btnId = d==='medium'?'norm':d;
+        document.getElementById(`btn-${btnId}`).classList.add('active');
+    };
+    
+    window.startGameHost = async () => {
+        const time = parseInt(document.getElementById('sel-time').value) || 30;
+        const rounds = parseInt(document.getElementById('sel-round').value) || 10;
+        gameSettings = { time, rounds };
+
+        const validQs = QUEST_BANK.map((q,i)=>({q,i})).filter(x => x.q.diff === selectedDiff || (selectedDiff==='hard')); 
+        const firstQ = validQs[Math.floor(Math.random()*validQs.length)]?.i || 0;
+        
+        await updateDoc(doc(db,"rooms",roomId), { 
+            status:'playing', 
+            endTime: Date.now() + (time * 1000), 
+            qIndex: firstQ, 
+            roundResults: {},
+            settings: gameSettings,
+            roundNum: 1
+        });
+    };
+
+    window.nextQuestionHost = async () => {
+        const nextRoundNum = (window.lastRoundNum || 1) + 1;
+        if (nextRoundNum > gameSettings.rounds) {
+            await updateDoc(doc(db,"rooms",roomId), { status:'finished' });
+        } else {
+            const validQs = QUEST_BANK.map((q,i)=>({q,i})).filter(x => x.q.diff === selectedDiff || (selectedDiff==='hard')); 
+            const nextQ = validQs[Math.floor(Math.random()*validQs.length)]?.i || 0;
+            await updateDoc(doc(db,"rooms",roomId), { 
+                status:'playing', 
+                endTime: Date.now() + (gameSettings.time * 1000), 
+                qIndex: nextQ, 
+                roundResults: {},
+                roundNum: nextRoundNum 
+            });
+        }
+    };
+
+    function startTimer(endTime) {
+        const diffEl = document.getElementById('diff-disp');
+        if(diffEl) {
+            diffEl.innerText = selectedDiff.toUpperCase();
+            diffEl.style.color = DIFF_SETTINGS[selectedDiff].color;
+        }
+        
+        if(window.timerInterval) clearInterval(window.timerInterval);
+        
+        window.timerInterval = setInterval(() => {
+            const duration = (gameSettings && gameSettings.time > 0) ? gameSettings.time : 30;
+            const left = Math.ceil((endTime - Date.now())/1000);
+            
+            const bar = document.getElementById('timer-bar-fill');
+            if(bar) bar.style.width = `${Math.max(0,(left/duration)*100)}%`;
+            
+            if(left > 0 && left <= 5) document.body.classList.add('urgent-mode');
+            else document.body.classList.remove('urgent-mode');
+
+            if(left<=0) {
+                document.body.classList.remove('urgent-mode');
+                clearInterval(window.timerInterval);
+                if(isHost) updateDoc(doc(db,"rooms",roomId), { status:'summary' });
+            }
+        }, 500);
+    }
+
+    function loadPuzzleFromBank(index) {
+        const q = QUEST_BANK[index] || QUEST_BANK[0];
+        currentKey = q.k; missingVoice = q.m; curV = missingVoice;
+        const s = {...q.s}; const a = {...q.a}; const t = {...q.t}; const b = {...q.b};
+        targetSolution = { s:{...s}, a:{...a}, t:{...t}, b:{...b} };
+        let defOct = (missingVoice==='b'||missingVoice==='t')?3:4;
+        const missingPart = missingVoice==='s'?s : missingVoice==='a'?a : missingVoice==='t'?t : b;
+        missingPart.n = 'c'; missingPart.o = defOct; missingPart.acc = '';
+        scoreData = [{ key:currentKey, beats:[{s:s, a:a, t:t, b:b, fig:q.fig}] }];
+        document.getElementById('target-desc').innerText = q.n;
+        onSnapshot(doc(db,"rooms",roomId), (snap) => {
+            if(snap.exists()) {
+                const rNum = snap.data().roundNum || 1;
+                window.lastRoundNum = rNum;
+            }
+        });
+        const checkVex = setInterval(() => {
+            const el = document.getElementById("vexflow-wrapper");
+            if (el && el.clientWidth > 0 && typeof Vex !== 'undefined') {
+                clearInterval(checkVex);
+                renderScore(document.getElementById("vexflow-out"), scoreData[0], currentKey, missingVoice, true); 
+                renderUI();
+            }
+        }, 200);
+    }
+
+    window.submitAnswer = async () => {
+        if(hasAnswered) return;
+        hasAnswered = true;
+        document.getElementById('waiting-overlay').classList.remove('hidden');
+        const uNote = scoreData[0].beats[0][missingVoice];
+        const tNote = targetSolution[missingVoice];
+        const getRealPC = (n, k) => {
+            const MAP = {c:0, d:2, e:4, f:5, g:7, a:9, b:11};
+            let val = MAP[n.n];
+            if(n.acc) { if(n.acc==='#') val++; if(n.acc==='b') val--; } 
+            else { const sig = KEY_SIGS[k] || {}; if(sig[n.n] === '#') val++; if(sig[n.n] === 'b') val--; }
+            return (val+12)%12;
+        };
+        const uVal = getRealPC(uNote, currentKey); const tVal = getRealPC(tNote, currentKey);
+        const isCorrect = (uVal === tVal);
+        if(isCorrect) {
+            playSfx('correct');
+            const elapsedTime = (Date.now() - roundStartTime) / 1000; 
+            const maxScore = 1000; const minScore = 600; 
+            const duration = (gameSettings?.time) || 30;
+            const scoreDrop = (elapsedTime / duration) * (maxScore - minScore); 
+            let points = Math.round(maxScore - scoreDrop);
+            if(points < minScore) points = minScore;
+            score += points;
+            document.getElementById('score-disp').innerText = score;
+            await updateDoc(doc(db,"rooms",roomId), { [`players.${currentUser.uid}.score`]:score });
+        } else { playSfx('wrong'); }
+        await updateDoc(doc(db,"rooms",roomId), { [`roundResults.${currentUser.uid}`]: isCorrect });
+    };
+
+    function showSummary(results, qIdx) {
+        clearInterval(window.timerInterval);
+        document.body.classList.remove('urgent-mode');
+        document.getElementById('waiting-overlay').classList.add('hidden');
+        document.getElementById('summary-overlay').classList.remove('hidden');
+        const q = QUEST_BANK[qIdx] || QUEST_BANK[0];
+        document.getElementById('ans-reveal').innerText = q.n;
+        const sSol = { key: q.k, beats: [{s:q.s, a:q.a, t:q.t, b:q.b, fig:q.fig}] };
+        const summaryDiv = document.getElementById("summary-vex-out");
+        summaryDiv.innerHTML = "";
+        setTimeout(() => { renderScore(summaryDiv, sSol, q.k, q.m, false, true); }, 100);
+        if(results) {
+            const vals = Object.values(results);
+            const correctCount = vals.filter(v => v === true).length;
+            const wrongCount = vals.filter(v => v === false).length;
+            const max = Math.max(correctCount, wrongCount, 1);
+            setTimeout(() => {
+                document.getElementById('bar-correct').style.height = `${(correctCount/max)*100}px`;
+                document.getElementById('bar-wrong').style.height = `${(wrongCount/max)*100}px`;
+            }, 100);
+        }
+        if(isHost) {
+            document.getElementById('host-next-btn').classList.remove('hidden');
+            document.getElementById('client-wait-next').classList.add('hidden');
+        } else {
+            document.getElementById('host-next-btn').classList.add('hidden');
+            document.getElementById('client-wait-next').classList.remove('hidden');
+        }
+    }
+
+    function showRankings(players) {
+        playSfx('win');
+        document.getElementById('game-ui').classList.add('hidden');
+        document.getElementById('rank-screen').classList.remove('hidden');
+        const sorted = Object.values(players).sort((a,b) => b.score - a.score);
+        const podiumBox = document.getElementById('podium-display');
+        const list = document.getElementById('final-list');
+        podiumBox.innerHTML = ''; list.innerHTML = '';
+        const order = [1, 0, 2];
+        order.forEach(idx => {
+            if(sorted[idx]) {
+                const p = sorted[idx];
+                const cls = idx === 0 ? 'pod-1' : idx === 1 ? 'pod-2' : 'pod-3';
+                podiumBox.innerHTML += `<div class="pod-step ${cls}"><div style="margin-bottom:auto;">${p.score}</div><img src="${p.avatar}" class="pod-avatar"><div style="font-size:0.8rem; overflow:hidden; max-width:100%; white-space:nowrap;">${p.name}</div><div style="font-size:1.5rem; font-weight:900;">${idx+1}</div></div>`;
+            }
+        });
+        sorted.slice(3).forEach((p, i) => {
+            const div = document.createElement('div');
+            div.className = "rank-row";
+            div.innerHTML = `<div><span style="font-weight:900; color:#94A3B8; margin-right:10px;">#${i+4}</span> <img src="${p.avatar}" style="width:20px; height:20px; border-radius:50%;"> ${p.name}</div><div style="color:#FACC15;">${p.score}</div>`;
+            div.onclick = () => handlePlayerClick(p);
+            list.appendChild(div);
+        });
+        if(score>0) updateDoc(doc(db, "users", currentUser.uid), { rankPoints: increment(Math.floor(score/10)) });
+    }
+
+    function renderScore(targetDiv, data, key, highlightVoice, isGame, isSolution=false) {
+        if(typeof Vex === 'undefined') return;
+        const VF = Vex.Flow;
+        targetDiv.innerHTML = "";
+        const width = targetDiv.clientWidth || 300;
+        const renderer = new VF.Renderer(targetDiv, VF.Renderer.Backends.SVG);
+        const height = isSolution ? 180 : 250; 
+        renderer.resize(width, height);
+        const ctx = renderer.getContext();
+        const scale = isSolution ? 0.9 : (window.innerWidth < 600 ? 0.95 : 1.1);
+        ctx.scale(scale, scale); 
+        ctx.setFillStyle("black"); ctx.setStrokeStyle("black");
+        const staveWidth = (width / scale) - 20;
+        const sT = new VF.Stave(10, 10, staveWidth);
+        const sB = new VF.Stave(10, 110, staveWidth);
+        sT.addClef("treble").addTimeSignature("4/4").addKeySignature(key).setContext(ctx).draw();
+        sB.addClef("bass").addTimeSignature("4/4").addKeySignature(key).setContext(ctx).draw();
+        const b = data.beats[0];
+        const makeNote = (p, clef) => {
+            const sn = new VF.StaveNote({ keys: [`${b[p].n}/${b[p].o}`], duration: "w", clef: clef });
+            if(b[p].acc) sn.addModifier(new VF.Accidental(b[p].acc));
+            if (isSolution && p === highlightVoice) sn.setStyle({ fillStyle: "#0533EA", strokeStyle: "#0533EA" }); 
+            else if (isGame && p === highlightVoice) sn.setStyle({ fillStyle: "#0533EA", strokeStyle: "#0533EA" });
+            else sn.setStyle({ fillStyle: "#6b7280", strokeStyle: "#6b7280" });
+            return sn;
+        };
+        const vS = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('s','treble')]);
+        const vA = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('a','treble')]);
+        const vT = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('t','bass')]);
+        const vB = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('b','bass')]);
+        new VF.Formatter().joinVoices([vS, vA]).joinVoices([vT, vB]).format([vS, vA, vT, vB], staveWidth - 50);
+        vS.draw(ctx, sT); vA.draw(ctx, sT); vT.draw(ctx, sB); vB.draw(ctx, sB);
+        if(b.fig) {
+            const x = vB.getTickables()[0].getAbsoluteX();
+            ctx.setFont("Sarabun", 12, "bold").setFillStyle("black");
+            b.fig.split(',').forEach((f, i) => ctx.fillText(f, x+10, 230+(i*15)));
+        }
+    }
+
+    window.setNote = (n) => { if(hasAnswered)return; playSfx('click'); save(); scoreData[0].beats[0][curV].n=n; scoreData[0].beats[0][curV].acc=''; renderScore(document.getElementById("vexflow-out"), scoreData[0], currentKey, missingVoice, true); renderUI(); };
+    window.setAcc = (a) => { if(hasAnswered)return; playSfx('click'); save(); let d=scoreData[0].beats[0][curV]; d.acc=(d.acc===a)?'':a; renderScore(document.getElementById("vexflow-out"), scoreData[0], currentKey, missingVoice, true); };
+    window.shiftOctave = (d) => { if(hasAnswered)return; playSfx('click'); save(); let v=scoreData[0].beats[0][curV].o+d; if(v>=2&&v<=6)scoreData[0].beats[0][curV].o=v; renderScore(document.getElementById("vexflow-out"), scoreData[0], currentKey, missingVoice, true); };
+    window.undo = () => { if(hasAnswered)return; playSfx('click'); if(historyStack.length){ scoreData=JSON.parse(historyStack.pop()); renderScore(document.getElementById("vexflow-out"), scoreData[0], currentKey, missingVoice, true); renderUI(); } };
+    function save() { if(historyStack.length>10)historyStack.shift(); historyStack.push(JSON.stringify(scoreData)); }
+    function renderUI() {
+        ['s','a','t','b'].forEach(v => {
+            const btn = document.getElementById(`v-${v}`);
+            if(v===missingVoice) { btn.classList.add('selected'); btn.classList.remove('locked'); }
+            else { btn.classList.remove('selected'); btn.classList.add('locked'); }
+        });
+        const n = scoreData[0].beats[0][curV].n;
+        document.querySelectorAll('.btn-n').forEach(b => b.classList.toggle('active', b.id===`n-${n}`));
+    }
+</script>
+
+</body>
+</html>

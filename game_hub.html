@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmonix - Game Hub</title>
+    
+    <script>
+        window.addEventListener('error', function(e) { console.error("System Error:", e.message); });
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Theme */
+        :root { 
+            --bg-app: #0F172A; --surface: #1E293B; 
+            --primary: #38BDF8; --secondary: #FACC15; --danger: #F43F5E;
+            --text-main: #F1F5F9; --text-dim: #94A3B8;
+        }
+        
+        /* Reset & Base */
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background-color: var(--bg-app); 
+            margin: 0; 
+            height: 100dvh; 
+            display: flex; 
+            flex-direction: column; 
+            color: var(--text-main); 
+            overflow: hidden; 
+            width: 100%; /* Fix overflow */
+        }
+        
+        .bg-fixed { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% -20%, #1e293b 0%, #0f172a 60%, #020617 100%); }
+        
+        #navbar { flex-shrink: 0; height: 60px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 50; }
+        .back-btn { text-decoration: none; font-weight: 700; color: var(--text-dim); display: flex; align-items: center; gap: 5px; font-size: 0.9rem; transition:0.2s; }
+        .back-btn:active { transform:scale(0.95); color:white; }
+        .page-title { 
+            font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--primary); 
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.6); /* Glowing Effect ตามรูป */
+        }
+
+        /* Layout Fixes */
+        .container { 
+            flex: 1; 
+            padding: 15px; /* ลด Padding กันล้น */
+            overflow-y: auto; 
+            display: flex; flex-direction: column; gap: 25px; 
+            max-width: 800px; margin: 0 auto; 
+            width: 100%; 
+        }
+        
+        /* Game Grid - Fix Overflow */
+        .section-header { font-size: 1.1rem; font-weight: 800; color: white; margin-bottom: 10px; border-left: 4px solid var(--secondary); padding-left: 10px; }
+        
+        .game-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; /* มือถือให้เรียงเดี่ยวเลย จะได้ไม่ล้น */
+            gap: 15px; 
+        }
+        /* จอใหญ่ค่อยแบ่ง 2 คอลัมน์ */
+        @media (min-width: 600px) {
+            .game-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+        }
+        
+        .game-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid #334155; border-radius: 16px; padding: 15px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .game-card:active { transform: scale(0.98); border-color: var(--primary); }
+        .game-card::before { content: ''; position: absolute; top:0; left:0; width: 4px; height: 100%; background: var(--primary); }
+        .game-icon { width: 55px; height: 55px; background: rgba(56, 189, 248, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--primary); border: 1px solid rgba(56, 189, 248, 0.3); flex-shrink: 0; }
+        .game-info { flex: 1; min-width: 0; /* Fix flex overflow */ }
+        .game-info h3 { margin: 0; font-size: 1.1rem; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .game-info p { margin: 3px 0 0; font-size: 0.8rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .game-play-btn { margin-left: 10px; background: var(--primary); color: #0F172A; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 0 10px rgba(56, 189, 248, 0.5); flex-shrink: 0; }
+
+        .game-card.locked { opacity: 0.6; filter: grayscale(1); cursor: not-allowed; }
+        .game-card.locked .game-icon { color: #64748B; background: rgba(255,255,255,0.05); border-color: #334155; }
+        .game-card.locked::before { background: #64748B; }
+
+        /* Leaderboard Fixes */
+        .lb-container { background: #1E293B; border-radius: 16px; border: 1px solid #334155; overflow: hidden; }
+        .lb-row { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .lb-row:last-child { border-bottom: none; }
+        
+        .lb-rank { width: 25px; font-weight: 800; font-size: 1rem; color: var(--text-dim); text-align: center; flex-shrink: 0; }
+        .lb-avatar { width: 35px; height: 35px; border-radius: 50%; margin: 0 10px; border: 2px solid #334155; flex-shrink: 0; }
+        
+        /* **KEY FIX: min-width: 0 เพื่อให้ text-overflow ทำงานใน flexbox** */
+        .lb-name { 
+            flex: 1; 
+            font-weight: bold; 
+            color: white; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            min-width: 0; 
+            font-size: 0.95rem;
+            margin-right: 10px;
+        }
+        
+        .lb-score { font-family: 'Cinzel', serif; color: var(--secondary); font-weight: bold; font-size: 1rem; flex-shrink: 0; }
+
+        .rank-1 { color: #FACC15 !important; text-shadow: 0 0 10px rgba(250,204,21,0.5); font-size: 1.4rem; }
+        .rank-2 { color: #94A3B8 !important; font-size: 1.2rem; }
+        .rank-3 { color: #B45309 !important; font-size: 1.1rem; }
+        .my-rank { background: rgba(56, 189, 248, 0.1); border-left: 4px solid var(--primary); }
+
+        .loader { text-align: center; padding: 20px; color: var(--text-dim); font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="bg-fixed"></div>
+    
+    <div id="navbar">
+        <a href="index.html" class="back-btn" onclick="playSfx('click')"><i class="fa-solid fa-arrow-left"></i> กลับ</a>
+        <div class="page-title">GAME ZONE</div>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div class="container">
+        
+        <div>
+            <div class="section-header">เลือกเกม</div>
+            <div class="game-grid">
+                <div class="game-card" onclick="playSfx('click'); window.location.href='game.html'">
+                    <div class="game-icon"><i class="fa-solid fa-music"></i></div>
+                    <div class="game-info">
+                        <h3>Harmony Blitz</h3>
+                        <p>ฟัง ทาย และสร้างคอร์ดให้ถูกต้อง</p>
+                    </div>
+                    <div class="game-play-btn"><i class="fa-solid fa-play"></i></div>
+                </div>
+
+                <div class="game-card locked" onclick="playSfx('wrong')">
+                    <div class="game-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                    <div class="game-info">
+                        <h3>Pitch Perfect</h3>
+                        <p>Coming Soon...</p>
+                    </div>
+                    <div class="game-play-btn" style="background:#334155; color:#94A3B8;"><i class="fa-solid fa-lock"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="section-header"><i class="fa-solid fa-trophy" style="color: #FACC15;"></i> อันดับคะแนนรวม</div>
+            <div class="lb-container" id="lb-list">
+                <div class="loader">กำลังโหลดข้อมูล...</div>
+            </div>
+        </div>
+
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff", measurementId: "G-JHVY16ZDHY" };
+    
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    let currentUser = null;
+
+    // --- SOUND ---
+    const clickSfx = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3");
+    const wrongSfx = new Audio("https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3");
+    window.playSfx = (type) => { 
+        if(type==='click') { clickSfx.currentTime = 0; clickSfx.play().catch(()=>{}); }
+        if(type==='wrong') { wrongSfx.currentTime = 0; wrongSfx.play().catch(()=>{}); }
+    };
+
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        loadLeaderboard();
+    });
+
+    async function loadLeaderboard() {
+        const list = document.getElementById('lb-list');
+        try {
+            const q = query(collection(db, "users"), orderBy("rankPoints", "desc"), limit(10));
+            const snapshot = await getDocs(q);
+            
+            list.innerHTML = "";
+            let rank = 1;
+
+            snapshot.forEach((doc) => {
+                const p = doc.data();
+                const isMe = currentUser && currentUser.uid === doc.id;
+                
+                let rankClass = "";
+                let icon = "";
+                if(rank === 1) { rankClass = "rank-1"; icon = "👑"; }
+                else if(rank === 2) { rankClass = "rank-2"; }
+                else if(rank === 3) { rankClass = "rank-3"; }
+
+                const html = `
+                    <div class="lb-row ${isMe ? 'my-rank' : ''}">
+                        <div class="lb-rank ${rankClass}">${icon || rank}</div>
+                        <img src="${p.photoURL || 'https://api.dicebear.com/7.x/fun-emoji/svg?seed=Guest'}" class="lb-avatar">
+                        <div class="lb-name">${p.displayName || 'Unknown'} ${isMe ? '(ฉัน)' : ''}</div>
+                        <div class="lb-score">${p.rankPoints || 0}</div>
+                    </div>
+                `;
+                list.innerHTML += html;
+                rank++;
+            });
+
+            if (snapshot.empty) {
+                list.innerHTML = '<div class="loader">ยังไม่มีข้อมูลคะแนน</div>';
+            }
+
+        } catch (e) {
+            console.error(e);
+            list.innerHTML = '<div class="loader" style="color:#F43F5E;">โหลดไม่สำเร็จ</div>';
+        }
+    }
+</script>
+<div id="invite-toast" style="position:fixed; top:20px; right:20px; background:#1E293B; color:white; padding:15px; border-radius:12px; border-left:4px solid #FACC15; display:none; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.5s;">
+    <div style="font-weight:bold; margin-bottom:5px;">คำเชิญเล่นเกม! 🎮</div>
+    <div id="inv-msg" style="font-size:0.9rem; color:#94A3B8;">User ชวนคุณเล่น</div>
+    <div style="margin-top:10px; display:flex; gap:10px;">
+        <button onclick="acceptInvite()" style="flex:1; background:#38BDF8; border:none; border-radius:6px; padding:6px; color:#0F172A; font-weight:bold; cursor:pointer;">เข้าร่วม</button>
+        <button onclick="closeInvite()" style="flex:1; background:transparent; border:1px solid #475569; border-radius:6px; padding:6px; color:#94A3B8; cursor:pointer;">ไม่สน</button>
+    </div>
+</div>
+
+<style> @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } } </style>
+
+<script type="module">
+    import { getFirestore, collection, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    
+    const db = getFirestore();
+    const auth = getAuth();
+    let currentInvite = null;
+    let autoCloseTimer = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if(user) {
+            onSnapshot(collection(db, `users/${user.uid}/notifications`), (snap) => {
+                snap.docChanges().forEach(change => {
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        if(data.type === 'invite') {
+                            currentInvite = { id: change.doc.id, ...data };
+                            showInvite(data);
+                        }
+                    }
+                });
+            });
+        }
+    });
+
+    function showInvite(data) {
+        const toast = document.getElementById('invite-toast');
+        document.getElementById('inv-msg').innerText = `${data.fromName} ชวนคุณเล่นเกม!`;
+        toast.style.display = 'block';
+        
+        // เล่นเสียงเตือน (ถ้ามีไฟล์เสียง)
+        try { new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3").play().catch(()=>{}); } catch(e){}
+
+        // **ตั้งเวลา 5 วินาที แล้วปิดเอง**
+        if(autoCloseTimer) clearTimeout(autoCloseTimer);
+        autoCloseTimer = setTimeout(() => {
+            closeInvite();
+        }, 5000); 
+    }
+
+    window.closeInvite = () => {
+        const toast = document.getElementById('invite-toast');
+        toast.style.display = 'none';
+        // ลบ Invite ออกจาก DB ด้วยเพื่อไม่ให้ค้าง
+        if(currentInvite && auth.currentUser) {
+             deleteDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${currentInvite.id}`)).catch(()=>{});
+        }
+    };
+
+    window.acceptInvite = async () => {
+        if(currentInvite) {
+            // ลบแจ้งเตือน
+            await deleteDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${currentInvite.id}`));
+            // **ส่งรหัสห้องไปด้วย เพื่อให้ auto-join**
+            window.location.href = `multi.html?mode=join&room=${currentInvite.roomId}`; 
+        }
+    };
+</script>
+
+</body>
+</html>

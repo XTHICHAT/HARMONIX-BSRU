@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmonix - Online World</title>
+    
+    <script>
+        window.addEventListener('error', function(e) { console.error("System Error:", e.message); });
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { 
+            --bg-app: #0F172A; --surface: #1E293B; 
+            --primary: #38BDF8; --secondary: #FACC15; --danger: #F43F5E; --success: #10B981;
+            --text-main: #F1F5F9; --text-dim: #94A3B8;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-app); margin: 0; height: 100dvh; display: flex; flex-direction: column; color: var(--text-main); overflow: hidden; }
+        
+        .bg-fixed { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% -20%, #1e293b 0%, #0f172a 60%, #020617 100%); }
+        
+        #navbar { flex-shrink: 0; height: 60px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 50; }
+        .back-btn { text-decoration: none; font-weight: 700; color: var(--text-dim); display: flex; align-items: center; gap: 5px; font-size: 0.9rem; transition:0.2s; }
+        .back-btn:active { transform:scale(0.95); color:white; }
+        .page-title { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--primary); text-shadow: 0 0 15px rgba(56, 189, 248, 0.6); }
+
+        .container { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; max-width: 1000px; margin: 0 auto; width: 100%; }
+        
+        /* Layout Grid: Desktop = 2 col, Mobile = 1 col */
+        .hub-grid { display: grid; grid-template-columns: 1fr; gap: 20px; height: 100%; }
+        @media (min-width: 768px) { .hub-grid { grid-template-columns: 2fr 1fr; } }
+
+        /* Section Styles */
+        .section-box { background: rgba(30, 41, 59, 0.5); border: 1px solid #334155; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .section-header { font-size: 1.1rem; font-weight: 800; color: white; border-left: 4px solid var(--secondary); padding-left: 10px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Game Card */
+        .game-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid #334155; border-radius: 16px; padding: 15px; display: flex; flex-direction: column; gap: 15px; transition: 0.2s; position: relative; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .game-card::before { content: ''; position: absolute; top:0; left:0; width: 4px; height: 100%; background: var(--primary); }
+        .gc-top { display: flex; align-items: center; gap: 15px; }
+        .game-icon { width: 50px; height: 50px; background: rgba(56, 189, 248, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--primary); border: 1px solid rgba(56, 189, 248, 0.3); flex-shrink: 0; }
+        .game-info h3 { margin: 0; font-size: 1.1rem; color: white; }
+        .game-info p { margin: 3px 0 0; font-size: 0.8rem; color: var(--text-dim); }
+        
+        .gc-actions { display: flex; gap: 10px; }
+        .btn-action { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: #0F172A; transition: 0.1s; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.9rem; }
+        .btn-create { background: var(--primary); box-shadow: 0 4px 0 #0369a1; }
+        .btn-join { background: #334155; color: var(--text-dim); border: 1px solid #475569; box-shadow: 0 4px 0 #020617; }
+        .btn-action:active { transform: translateY(4px); box-shadow: none; }
+
+        .game-card.locked { opacity: 0.6; filter: grayscale(1); cursor: not-allowed; }
+        
+        /* Friend System */
+        .search-box { display: flex; gap: 10px; margin-bottom: 10px; }
+        .input-search { flex: 1; background: #0F172A; border: 1px solid #334155; color: white; padding: 10px; border-radius: 8px; outline: none; }
+        .btn-search { background: var(--secondary); color: #0F172A; border: none; padding: 0 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        .friend-list { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
+        .friend-item { display: flex; align-items: center; gap: 10px; background: #0F172A; padding: 8px 12px; border-radius: 10px; border: 1px solid #334155; }
+        .f-avatar { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #475569; }
+        .f-info { flex: 1; font-size: 0.9rem; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .f-status { width: 8px; height: 8px; border-radius: 50%; background: #94A3B8; }
+        .f-status.online { background: var(--success); box-shadow: 0 0 5px var(--success); }
+        
+        .empty-state { text-align: center; color: var(--text-dim); font-size: 0.85rem; padding: 20px; font-style: italic; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 100; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal-overlay.show { visibility: visible; opacity: 1; }
+        .modal-content { background: #1E293B; padding: 20px; border-radius: 16px; width: 90%; max-width: 320px; text-align: center; border: 1px solid #334155; }
+    </style>
+</head>
+<body>
+    <div class="bg-fixed"></div>
+    
+    <div id="navbar">
+        <a href="index.html" class="back-btn" onclick="playSfx('click')"><i class="fa-solid fa-arrow-left"></i> กลับ</a>
+        <div class="page-title">ONLINE WORLD</div>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div class="container">
+        <div class="hub-grid">
+            
+            <div class="section-box">
+                <div class="section-header">
+                    <span><i class="fa-solid fa-gamepad"></i> เลือกเกม</span>
+                </div>
+                
+                <div class="game-card">
+                    <div class="gc-top">
+                        <div class="game-icon"><i class="fa-solid fa-music"></i></div>
+                        <div class="game-info">
+                            <h3>Harmony Blitz</h3>
+                            <p>ประชันความเร็วและทฤษฎีดนตรี</p>
+                        </div>
+                    </div>
+                    <div class="gc-actions">
+                        <button class="btn-action btn-create" onclick="playSfx('click'); goToGame('multi.html?mode=host')">
+                            <i class="fa-solid fa-plus"></i> สร้างห้อง
+                        </button>
+                        <button class="btn-action btn-join" onclick="playSfx('click'); goToGame('multi.html?mode=join')">
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i> เข้าร่วม
+                        </button>
+                    </div>
+                </div>
+
+                <div class="game-card locked" onclick="playSfx('wrong')">
+                    <div class="gc-top">
+                        <div class="game-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                        <div class="game-info">
+                            <h3>Pitch Perfect</h3>
+                            <p>Coming Soon...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-box" style="height: fit-content;">
+                <div class="section-header">
+                    <span><i class="fa-solid fa-user-group"></i> เพื่อน (<span id="friend-count">0</span>)</span>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="friend-search" class="input-search" placeholder="ค้นหาชื่อเพื่อน...">
+                    <button class="btn-search" onclick="playSfx('click'); searchFriend()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+
+                <div class="friend-list" id="friend-list-container">
+                    <div class="empty-state">กำลังโหลดรายชื่อ...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="search-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="color:white; margin:0 0 15px;">ผลการค้นหา</h3>
+            <div id="search-result" style="margin-bottom:20px; min-height:50px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#94A3B8;">
+                ...
+            </div>
+            <button class="btn-action btn-join" onclick="document.getElementById('search-modal').classList.remove('show')">ปิด</button>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, arrayUnion, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff", measurementId: "G-JHVY16ZDHY" };
+    
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    let currentUser = null;
+
+    const clickSfx = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3");
+    const wrongSfx = new Audio("https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3");
+    window.playSfx = (type) => { 
+        if(type==='click') { clickSfx.currentTime = 0; clickSfx.play().catch(()=>{}); }
+        if(type==='wrong') { wrongSfx.currentTime = 0; wrongSfx.play().catch(()=>{}); }
+    };
+
+    onAuthStateChanged(auth, (user) => {
+        if(user) {
+            currentUser = user;
+            loadFriends();
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
+
+    window.goToGame = (url) => {
+        window.location.href = url;
+    };
+
+    // --- FRIEND SYSTEM ---
+    async function loadFriends() {
+        const list = document.getElementById('friend-list-container');
+        try {
+            const docRef = doc(db, "users", currentUser.uid);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists() && docSnap.data().friends && docSnap.data().friends.length > 0) {
+                const friends = docSnap.data().friends;
+                document.getElementById('friend-count').innerText = friends.length;
+                list.innerHTML = "";
+                
+                friends.forEach(f => {
+                    list.innerHTML += `
+                        <div class="friend-item">
+                            <div class="f-status online"></div>
+                            <img src="${f.avatar}" class="f-avatar">
+                            <div class="f-info">${f.name}</div>
+                            <i class="fa-solid fa-gamepad" style="color:#334155;"></i>
+                        </div>`;
+                });
+            } else {
+                list.innerHTML = '<div class="empty-state">ยังไม่มีเพื่อน<br>ลองค้นหาชื่อเพื่อนดูสิ</div>';
+                document.getElementById('friend-count').innerText = "0";
+            }
+        } catch (e) {
+            console.error(e);
+            list.innerHTML = '<div class="empty-state" style="color:#F43F5E;">โหลดเพื่อนไม่สำเร็จ</div>';
+        }
+    }
+
+    window.searchFriend = async () => {
+        const name = document.getElementById('friend-search').value.trim();
+        if(!name) return;
+        
+        document.getElementById('search-modal').classList.add('show');
+        const resDiv = document.getElementById('search-result');
+        resDiv.innerHTML = '<span class="loader"></span> กำลังค้นหา...';
+
+        try {
+            const q = query(collection(db, "users"), where("displayName", "==", name));
+            const querySnapshot = await getDocs(q);
+            
+            resDiv.innerHTML = "";
+            
+            if (querySnapshot.empty) {
+                resDiv.innerHTML = "ไม่พบผู้ใช้ชื่อนี้";
+            } else {
+                querySnapshot.forEach((doc) => {
+                    const u = doc.data();
+                    if(doc.id === currentUser.uid) return; // Don't show self
+
+                    const div = document.createElement('div');
+                    div.style.cssText = "display:flex; flex-direction:column; align-items:center; gap:10px;";
+                    div.innerHTML = `
+                        <img src="${u.photoURL}" style="width:50px; height:50px; border-radius:50%; border:2px solid #38BDF8;">
+                        <span style="font-weight:bold; color:white; font-size:1.1rem;">${u.displayName}</span>
+                        <button class="btn-action btn-create" style="width:100%; margin-top:5px; padding:8px 20px;">
+                            <i class="fa-solid fa-user-plus"></i> เพิ่มเพื่อน
+                        </button>
+                    `;
+                    div.querySelector('button').onclick = () => addFriend(doc.id, u.displayName, u.photoURL);
+                    resDiv.appendChild(div);
+                });
+                
+                if(resDiv.innerHTML === "") resDiv.innerHTML = "ไม่พบผู้ใช้ (หรือเป็นตัวคุณเอง)";
+            }
+        } catch (e) {
+            resDiv.innerHTML = "เกิดข้อผิดพลาด";
+        }
+    };
+
+    async function addFriend(uid, name, avatar) {
+        try {
+            await updateDoc(doc(db, "users", currentUser.uid), {
+                friends: arrayUnion({ uid, name, avatar })
+            });
+            alert(`เพิ่ม ${name} เป็นเพื่อนแล้ว!`);
+            document.getElementById('search-modal').classList.remove('show');
+            loadFriends();
+        } catch(e) {
+            alert("เพิ่มเพื่อนไม่สำเร็จ");
+        }
+    }
+</script>
+<div id="invite-toast" style="position:fixed; top:20px; right:20px; background:#1E293B; color:white; padding:15px; border-radius:12px; border-left:4px solid #FACC15; display:none; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.5s;">
+    <div style="font-weight:bold; margin-bottom:5px;">คำเชิญเล่นเกม! 🎮</div>
+    <div id="inv-msg" style="font-size:0.9rem; color:#94A3B8;">User ชวนคุณเล่น</div>
+    <div style="margin-top:10px; display:flex; gap:10px;">
+        <button onclick="acceptInvite()" style="flex:1; background:#38BDF8; border:none; border-radius:6px; padding:6px; color:#0F172A; font-weight:bold; cursor:pointer;">เข้าร่วม</button>
+        <button onclick="closeInvite()" style="flex:1; background:transparent; border:1px solid #475569; border-radius:6px; padding:6px; color:#94A3B8; cursor:pointer;">ไม่สน</button>
+    </div>
+</div>
+
+<style> @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } } </style>
+
+<script type="module">
+    import { getFirestore, collection, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    
+    const db = getFirestore();
+    const auth = getAuth();
+    let currentInvite = null;
+    let autoCloseTimer = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if(user) {
+            onSnapshot(collection(db, `users/${user.uid}/notifications`), (snap) => {
+                snap.docChanges().forEach(change => {
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        if(data.type === 'invite') {
+                            currentInvite = { id: change.doc.id, ...data };
+                            showInvite(data);
+                        }
+                    }
+                });
+            });
+        }
+    });
+
+    function showInvite(data) {
+        const toast = document.getElementById('invite-toast');
+        document.getElementById('inv-msg').innerText = `${data.fromName} ชวนคุณเล่นเกม!`;
+        toast.style.display = 'block';
+        
+        // เล่นเสียงเตือน (ถ้ามีไฟล์เสียง)
+        try { new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3").play().catch(()=>{}); } catch(e){}
+
+        // **ตั้งเวลา 5 วินาที แล้วปิดเอง**
+        if(autoCloseTimer) clearTimeout(autoCloseTimer);
+        autoCloseTimer = setTimeout(() => {
+            closeInvite();
+        }, 5000); 
+    }
+
+    window.closeInvite = () => {
+        const toast = document.getElementById('invite-toast');
+        toast.style.display = 'none';
+        // ลบ Invite ออกจาก DB ด้วยเพื่อไม่ให้ค้าง
+        if(currentInvite && auth.currentUser) {
+             deleteDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${currentInvite.id}`)).catch(()=>{});
+        }
+    };
+
+    window.acceptInvite = async () => {
+        if(currentInvite) {
+            // ลบแจ้งเตือน
+            await deleteDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${currentInvite.id}`));
+            // **ส่งรหัสห้องไปด้วย เพื่อให้ auto-join**
+            window.location.href = `multi.html?mode=join&room=${currentInvite.roomId}`; 
+        }
+    };
+</script>
+
+</body>
+</html>

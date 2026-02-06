@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmonix - Single Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Serif:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --bg-app: #0F172A; --surface: #1E293B; --active-note: #FACC15; --success: #10B981; --accent: #C084FC; --text-main: #F1F5F9; --border-color: #334155; 
+            --shadow-dark: #020617; --shadow-success: #047857;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { font-family: 'Sarabun'; background: var(--bg-app); margin: 0; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; color: var(--text-main); }
+
+        #top-area { flex-shrink: 0; background: var(--surface); z-index: 20; border-bottom: 1px solid var(--border-color); }
+        #timer-bar-fill { width: 100%; height: 6px; background: #34D399; transition: width 0.1s linear; }
+        #nav-bar { height: 50px; padding: 0 15px; display: grid; grid-template-columns: 80px 1fr 120px; align-items: center; } 
+        .back-btn { text-decoration: none; font-weight: 700; color: #94A3B8; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; justify-self: start; transition:0.2s; }
+        .back-btn:active { transform:scale(0.95); color:white; }
+
+        .stats-center { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .score-val { font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--active-note); font-weight: 800; text-shadow: 0 0 10px rgba(250,204,21,0.3); }
+        .diff-tag { font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: #334155; color: #94A3B8; text-transform: uppercase; }
+        .user-profile { justify-self: end; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px 12px 4px 4px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        .u-avatar { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--active-note); }
+
+        #score-area { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; background: radial-gradient(circle at center, #263346 0%, #0F172A 100%); min-height: 0; }
+        #vexflow-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        #vexflow-out { width: 100%; display:flex; justify-content:center; filter: invert(100%) opacity(0.9) drop-shadow(0 0 2px rgba(255,255,255,0.2)); }
+
+        #control-panel { 
+            flex-shrink: 0; background: #162032; border-top: 1px solid var(--border-color); 
+            display: flex; flex-direction: column; padding-bottom: max(15px, env(safe-area-inset-bottom)); z-index: 50; 
+        }
+        .info-bar { padding: 0 15px; height: 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .target-val { font-size: 1.1rem; font-weight: 800; color: #38BDF8; font-family: 'Noto Serif', serif; }
+        
+        .submit-btn { 
+            background: var(--success); color: #064E3B; border: none; padding: 0 20px; height: 36px; 
+            border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 0.85rem; 
+            display: flex; align-items: center; gap: 8px; transition: 0.1s; 
+            box-shadow: 0 4px 0 var(--shadow-success);
+        }
+        .submit-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        .controls-grid { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .voice-row { display: flex; gap: 6px; width: 100%; }
+        .btn-v { 
+            flex: 1; background: #334155; border: none; padding: 10px 0; border-radius: 8px; color: #94A3B8; font-weight: 800; font-size: 0.8rem; cursor: pointer; transition: 0.1s; text-transform: uppercase; 
+            box-shadow: 0 3px 0 var(--shadow-dark);
+        }
+        .btn-v:active { transform: translateY(3px); box-shadow: none; }
+        .btn-v.selected { background: var(--active-note); color: #0F172A; box-shadow: 0 3px 0 #b45309; transform: translateY(0); }
+        .btn-v.selected:active { transform: translateY(3px); box-shadow: none; }
+
+        .note-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .btn-n { 
+            background: #1e293b; border: 1px solid #334155; padding: 0; border-radius: 10px; color: white; font-size: 1.2rem; font-weight: 800; cursor: pointer; height: 45px; transition: 0.1s; 
+            box-shadow: 0 4px 0 var(--shadow-dark);
+        }
+        .btn-n:active { transform: translateY(4px); box-shadow: none; }
+        .btn-n.active { background: var(--accent); color: white; border: none; box-shadow: 0 4px 0 #7e22ce; }
+        .btn-n.active:active { transform: translateY(4px); box-shadow: none; }
+
+        .tool-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+        .btn-tool { 
+            background: #334155; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; height: 38px; font-size: 0.9rem; 
+            box-shadow: 0 3px 0 var(--shadow-dark);
+        }
+        .btn-tool:active { transform: translateY(3px); box-shadow: none; }
+        .btn-undo { background: #EF4444; box-shadow: 0 3px 0 #991b1b; }
+
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 100; visibility: hidden; opacity: 0; transition: 0.3s; }
+        .modal.show { visibility: visible; opacity: 1; }
+        .modal-content { background: #1E293B; padding: 30px; border-radius: 24px; text-align: center; border: 1px solid #334155; width: 85%; max-width: 350px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        
+        .diff-btn { 
+            width: 30%; padding: 12px; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; color: #0F172A; margin: 0 5px; opacity: 0.6; transition: 0.1s; 
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+        }
+        .diff-btn:active { transform: translateY(4px); box-shadow: none; }
+        .diff-btn.active { opacity: 1; transform: scale(1.05); }
+        .btn-green { background: #34D399; box-shadow: 0 4px 0 #047857; }
+        .btn-yellow { background: #FACC15; box-shadow: 0 4px 0 #ca8a04; }
+        .btn-red { background: #F43F5E; box-shadow: 0 4px 0 #be123c; }
+
+        .btn-result { width: 100%; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 1rem; border:none; margin: 10px 0; transition: 0.1s; }
+        .btn-res-primary { background: #FACC15; color: #422006; box-shadow: 0 4px 0 #ca8a04; }
+        .btn-res-primary:active { transform: translateY(4px); box-shadow: none; }
+        .btn-res-sec { background: transparent; border: 2px solid #334155; color: #94A3B8; box-shadow: 0 4px 0 #020617; }
+        .btn-res-sec:active { transform: translateY(4px); box-shadow: none; }
+    </style>
+</head>
+<body>
+    <div id="top-area">
+        <div id="timer-bar-fill"></div>
+        <div id="nav-bar">
+            <a href="game_hub.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i> ออก</a>
+            <div class="stats-center"><div id="score-disp" class="score-val">0</div><div id="diff-disp" class="diff-tag">EASY</div></div>
+            <div class="user-profile"><img src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=Guest" class="u-avatar" id="u-img"></div>
+        </div>
+    </div>
+    <div id="score-area"><div id="vexflow-wrapper"><div id="vexflow-out"></div></div></div>
+    <div id="control-panel">
+        <div class="info-bar">
+            <div><div style="font-size:0.65rem; color:#94A3B8;">TARGET CHORD</div><div class="target-val" id="target-desc">-</div></div>
+            <button class="submit-btn" onclick="checkAnswer()">ส่งคำตอบ <i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+        <div class="controls-grid">
+            <div class="voice-row"><button class="btn-v" id="v-s">Soprano</button><button class="btn-v" id="v-a">Alto</button><button class="btn-v" id="v-t">Tenor</button><button class="btn-v" id="v-b">Bass</button></div>
+            <div class="note-row"><button class="btn-n" onclick="playToneNote('c'); setNote('c')" id="n-c">C</button><button class="btn-n" onclick="playToneNote('d'); setNote('d')" id="n-d">D</button><button class="btn-n" onclick="playToneNote('e'); setNote('e')" id="n-e">E</button><button class="btn-n" onclick="playToneNote('f'); setNote('f')" id="n-f">F</button><button class="btn-n" onclick="playToneNote('g'); setNote('g')" id="n-g">G</button><button class="btn-n" onclick="playToneNote('a'); setNote('a')" id="n-a">A</button><button class="btn-n" onclick="playToneNote('b'); setNote('b')" id="n-b">B</button></div>
+            <div class="tool-row">
+                <button class="btn-tool acc-text" onclick="playSfx('click'); setAcc('#')" style="color:#FACC15">♯</button><button class="btn-tool acc-text" onclick="playSfx('click'); setAcc('n')">♮</button><button class="btn-tool acc-text" onclick="playSfx('click'); setAcc('b')" style="color:#C084FC">♭</button>
+                <button class="btn-tool" onclick="playSfx('click'); shiftOctave(1)">Oct+</button><button class="btn-tool" onclick="playSfx('click'); shiftOctave(-1)">Oct-</button><button class="btn-tool btn-undo" onclick="playSfx('click'); undo()"><i class="fa-solid fa-rotate-left"></i></button>
+            </div>
+        </div>
+    </div>
+    <div id="start-modal" class="modal show"><div class="modal-content"><h1 style="color:#FACC15; margin:0 0 10px;">Harmony Blitz</h1><p style="color:#94A3B8; margin-bottom:20px;">เลือกความยาก</p><div style="display:flex; justify-content:center; margin-bottom:20px;"><button class="diff-btn btn-green" onclick="playSfx('click'); startGame('easy')">Easy</button><button class="diff-btn btn-yellow" onclick="playSfx('click'); startGame('medium')">Normal</button><button class="diff-btn btn-red" onclick="playSfx('click'); startGame('hard')">Hard</button></div></div></div>
+    <div id="result-modal" class="modal"><div class="modal-content"><div id="res-icon" style="font-size:3.5rem; margin-bottom:10px;">🏆</div><h2 id="res-title" style="margin:0; color:white;">TIME'S UP!</h2><div style="font-size:3rem; font-weight:800; color:#FACC15; margin:10px 0;" id="final-score">0</div><button class="btn-result btn-res-primary" onclick="playSfx('click'); location.reload()">Play Again</button><button class="btn-result btn-res-sec" onclick="playSfx('click'); window.location.href='index.html'">Back to Home</button></div></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff", measurementId: "G-JHVY16ZDHY" };
+    const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+    
+    // --- AUDIO SYSTEM ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const SFX = {
+        click: new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"),
+        correct: new Audio("https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"),
+        wrong: new Audio("https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3"),
+        win: new Audio("https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3")
+    };
+    Object.values(SFX).forEach(s => { s.volume = 0.5; s.load(); });
+    window.playSfx = (type) => { try { if(SFX[type]){ SFX[type].currentTime=0; SFX[type].play().catch(()=>{}); } } catch(e){} };
+
+    const NOTE_FREQS = { 'c': 261.63, 'c#': 277.18, 'db': 277.18, 'd': 293.66, 'd#': 311.13, 'eb': 311.13, 'e': 329.63, 'f': 349.23, 'f#': 369.99, 'gb': 369.99, 'g': 392.00, 'g#': 415.30, 'ab': 415.30, 'a': 440.00, 'a#': 466.16, 'bb': 466.16, 'b': 493.88 };
+    window.playToneNote = (noteName) => {
+        try {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const n = scoreData[0].beats[0][curV];
+            let freq = NOTE_FREQS[noteName.toLowerCase()] || 440;
+            const octDiff = n.o - 4;
+            freq = freq * Math.pow(2, octDiff);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.value = freq;
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch(e) {}
+    };
+
+    const KEY_SIGS = { 'C': {}, 'G': {f:'#'}, 'D': {f:'#',c:'#'}, 'A': {f:'#',c:'#',g:'#'}, 'E': {f:'#',c:'#',g:'#',d:'#'}, 'F': {b:'b'}, 'Bb': {b:'b',e:'b'}, 'Eb': {b:'b',e:'b',a:'b'} };
+    const OFFSETS = { 'C':0, 'G':7, 'D':2, 'A':9, 'E':4, 'F':5, 'Bb':10, 'Eb':3 };
+    const DIFF_SETTINGS = { 'easy': { keys:['C','G','F'], mult:1, color:'#34D399' }, 'medium': { keys:['C','G','F','D','Bb'], mult:1.5, color:'#FACC15' }, 'hard': { keys:['C','G','D','A','E','F','Bb','Eb'], mult:2, color:'#F43F5E' } };
+    let currentUser, currentScore=0, timerInterval, isPlaying=false, selectedDiff='easy';
+    let scoreData=[{key:'C', beats:[{s:{n:'c',o:5,acc:''},a:{n:'g',o:4,acc:''},t:{n:'e',o:4,acc:''},b:{n:'c',o:3,acc:''}}] }];
+    let curV='s', missingVoice='s', targetSolution=null, currentKey='C', historyStack=[]; const VF = Vex.Flow;
+    
+    onAuthStateChanged(auth, (user) => { if(user) { currentUser = user; document.getElementById('u-img').src = user.photoURL; } else window.location.href = 'index.html'; });
+    
+    window.startGame = (diff) => { selectedDiff = diff; document.getElementById('start-modal').classList.remove('show'); document.getElementById('diff-disp').innerText = diff.toUpperCase(); document.getElementById('diff-disp').style.color = DIFF_SETTINGS[diff].color; isPlaying = true; let timeLeft = 60; timerInterval = setInterval(() => { timeLeft--; document.getElementById('timer-bar-fill').style.width = `${(timeLeft/60)*100}%`; if(timeLeft<=0) endGame(); }, 1000); nextPuzzle(); };
+    function nextPuzzle() { try { generateDynamicPuzzle(); renderScore(); renderUI(); } catch(e){ nextPuzzle(); } }
+    function generateDynamicPuzzle() { const conf = DIFF_SETTINGS[selectedDiff]; currentKey = conf.keys[Math.floor(Math.random()*conf.keys.length)]; const DEGS = { 0:{t:'Maj',r:'I'}, 2:{t:'min',r:'ii'}, 4:{t:'min',r:'iii'}, 5:{t:'Maj',r:'IV'}, 7:{t:'Maj',r:'V'}, 9:{t:'min',r:'vi'}, 11:{t:'dim',r:'vii°'} }; const dIdx = [0,5,7,9,2][Math.floor(Math.random()*5)]; const degObj = {d:dIdx, ...DEGS[dIdx]}; const inv = selectedDiff==='easy' ? 0 : Math.floor(Math.random()*2); const chord = buildChord(currentKey, degObj, inv); targetSolution = chord; missingVoice = ['s','a','t','b'][Math.floor(Math.random()*4)]; curV = missingVoice; scoreData = [{ key:currentKey, beats:[{s:{...chord.s}, a:{...chord.a}, t:{...chord.t}, b:{...chord.b}, fig:chord.fig}] }]; document.getElementById('target-desc').innerText = `${chord.name} (${chord.roman})`; scoreData[0].beats[0][missingVoice] = {n:'c', o:(missingVoice==='b'||missingVoice==='t')?3:4, acc:''}; }
+    function buildChord(key, degObj, inv) { const kOff = OFFSETS[key]; const rootVal = (kOff + degObj.d) % 12; const notes = [rootVal, (rootVal+(degObj.t==='Maj'?4:3))%12, (rootVal+7)%12]; const PC = ['c','db','d','eb','e','f','f#','g','ab','a','bb','b']; const getNote = (pc, oct) => ({ n:PC[pc].replace(/[#b]/g,''), acc:PC[pc].includes('#')?'#':PC[pc].includes('b')?'b':'', o:oct }); let bassPC = notes[inv]; let bObj = getNote(bassPC, 3); let rem = [...notes].sort(()=>Math.random()-0.5); let tObj = getNote(rem[0], 4); let aObj = getNote(rem[1], 4); let sObj = getNote(rem[2], 5); let fig = inv===1?"6":inv===2?"6,4":""; let suf = inv===1?"6":inv===2?"6/4":""; return { s:sObj, a:aObj, t:tObj, b:bObj, fig, roman:degObj.r+suf, name:PC[rootVal].toUpperCase()+(degObj.t==='min'?'m':degObj.t==='dim'?'dim':'') }; }
+    window.checkAnswer = async () => { const uNote = scoreData[0].beats[0][missingVoice]; const tNote = targetSolution[missingVoice]; const getRealPC = (n, k) => { const MAP = {c:0, d:2, e:4, f:5, g:7, a:9, b:11}; let val = MAP[n.n]; if(n.acc) { if(n.acc==='#') val++; if(n.acc==='b') val--; } else { const sig = KEY_SIGS[k] || {}; if(sig[n.n] === '#') val++; if(sig[n.n] === 'b') val--; } return (val+12)%12; }; const uVal = getRealPC(uNote, currentKey); const tVal = getRealPC(tNote, currentKey); if(uVal === tVal) { playSfx('correct'); currentScore += 100 * DIFF_SETTINGS[selectedDiff].mult; document.getElementById('score-disp').innerText = currentScore; feedback(true); } else { playSfx('wrong'); currentScore = Math.max(0, currentScore - 50); document.getElementById('score-disp').innerText = currentScore; feedback(false); } };
+    function feedback(correct) { const bg = document.getElementById('score-area'); bg.style.background = correct ? `radial-gradient(circle, #064E3B 0%, #0F172A 80%)` : `radial-gradient(circle, #9F1239 0%, #0F172A 80%)`; setTimeout(() => { bg.style.background = `radial-gradient(circle at center, #263346 0%, #0F172A 100%)`; if(correct) nextPuzzle(); }, 300); }
+    async function endGame() { playSfx('win'); isPlaying = false; clearInterval(timerInterval); document.getElementById('result-modal').classList.add('show'); document.getElementById('final-score').innerText = currentScore; if(currentUser && currentScore > 0) { const ref = doc(db, "users", currentUser.uid); await updateDoc(ref, { rankPoints: increment(Math.floor(currentScore/10)) }); } }
+    window.setNote = (n) => { if(!isPlaying) return; playSfx('click'); save(); scoreData[0].beats[0][curV].n=n; scoreData[0].beats[0][curV].acc=''; renderScore(); renderUI(); };
+    window.setAcc = (a) => { if(!isPlaying) return; playSfx('click'); save(); let d=scoreData[0].beats[0][curV]; d.acc=(d.acc===a)?'':a; renderScore(); };
+    window.shiftOctave = (d) => { if(!isPlaying) return; playSfx('click'); save(); let v=scoreData[0].beats[0][curV].o+d; if(v>=2&&v<=6)scoreData[0].beats[0][curV].o=v; renderScore(); };
+    window.undo = () => { if(historyStack.length){ playSfx('click'); scoreData=JSON.parse(historyStack.pop()); renderScore(); renderUI(); } };
+    function save() { if(historyStack.length>10)historyStack.shift(); historyStack.push(JSON.stringify(scoreData)); }
+    function renderScore() { const div = document.getElementById("vexflow-out"); div.innerHTML = ""; const wrapper = document.getElementById("vexflow-wrapper"); const availableWidth = wrapper.clientWidth || 350; const staveWidth = availableWidth - 20; const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG); renderer.resize(availableWidth, 250); const ctx = renderer.getContext(); const isMobile = window.innerWidth < 600; const scaleFactor = isMobile ? 0.95 : 1.1; ctx.scale(scaleFactor, scaleFactor); ctx.setFillStyle("black"); ctx.setStrokeStyle("black"); const sT = new VF.Stave(10, 10, staveWidth / scaleFactor); const sB = new VF.Stave(10, 110, staveWidth / scaleFactor); sT.addClef("treble").addTimeSignature("4/4").addKeySignature(currentKey).setContext(ctx).draw(); sB.addClef("bass").addTimeSignature("4/4").addKeySignature(currentKey).setContext(ctx).draw(); const b = scoreData[0].beats[0]; const makeNote = (p, clef) => { const sn = new VF.StaveNote({ keys: [`${b[p].n}/${b[p].o}`], duration: "w", clef: clef }); if(b[p].acc) sn.addModifier(new VF.Accidental(b[p].acc)); if(p === missingVoice) sn.setStyle({ fillStyle: "#0533EA", strokeStyle: "#0533EA" }); else sn.setStyle({ fillStyle: "#6b7280", strokeStyle: "#6b7280" }); return sn; }; const vS = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('s','treble')]); const vA = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('a','treble')]); const vT = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('t','bass')]); const vB = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('b','bass')]); new VF.Formatter().joinVoices([vS, vA]).joinVoices([vT, vB]).format([vS, vA, vT, vB], (staveWidth / scaleFactor) - 50); vS.draw(ctx, sT); vA.draw(ctx, sT); vT.draw(ctx, sB); vB.draw(ctx, sB); if(b.fig) { const x = vB.getTickables()[0].getAbsoluteX(); ctx.setFont("Sarabun", 12, "bold").setFillStyle("black"); b.fig.split(',').forEach((f, i) => ctx.fillText(f, x+10, 230+(i*15))); } }
+    function renderUI() { ['s','a','t','b'].forEach(v => { const btn = document.getElementById(`v-${v}`); if(v===missingVoice) { btn.classList.add('selected'); } else { btn.classList.remove('selected'); } }); const n = scoreData[0].beats[0][curV].n; document.querySelectorAll('.btn-n').forEach(b => b.classList.toggle('active', b.id===`n-${n}`)); }
+</script>
+<div id="invite-toast" style="position:fixed; top:20px; right:20px; background:#1E293B; color:white; padding:15px; border-radius:12px; border-left:4px solid #FACC15; display:none; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.5s;">
+    <div style="font-weight:bold; margin-bottom:5px;">คำเชิญเล่นเกม! 🎮</div>
+    <div id="inv-msg" style="font-size:0.9rem; color:#94A3B8;">User ชวนคุณเล่น</div>
+    <div style="margin-top:10px; display:flex; gap:10px;">
+        <button onclick="acceptInvite()" style="flex:1; background:#38BDF8; border:none; border-radius:6px; padding:6px; color:#0F172A; font-weight:bold; cursor:pointer;">เข้าร่วม</button>
+        <button onclick="closeInvite()" style="flex:1; background:transparent; border:1px solid #475569; border-radius:6px; padding:6px; color:#94A3B8; cursor:pointer;">ไม่สน</button>
+    </div>
+</div>
+
+<style> @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } } </style>
+
+<script type="module">
+    import { getFirestore, collection, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    
+    const db = getFirestore();
+    const auth = getAuth();
+    let currentInvite = null;
+    let autoCloseTimer = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if(user) {
+            onSnapshot(collection(db, `users/${user.uid}/notifications`), (snap) => {
+                snap.docChanges().forEach(change => {
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        if(data.type === 'invite') {
+                            currentInvite = { id: change.doc.id, ...data };
+                            showInvite(data);
+                        }
+                    }
+                });
+            });
+        }
+    });
+
+    function showInvite(data) {
+        const toast = document.getElementById('invite-toast');
+        document.getElementById('inv-msg').innerText = `${data.fromName} ชวนคุณเล่นเกม!`;
+        toast.style.display = 'block';
+        
+        // เล่นเสียงเตือน (ถ้ามีไฟล์เสียง)
+        try { new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3").play().catch(()=>{}); } catch(e){}
+
+        // **ตั้งเวลา 5 วินาที แล้วปิดเอง**
+        if(autoCloseTimer) clearTimeout(autoCloseTimer);
+        autoCloseTimer = setTimeout(() => {
+            closeInvite();
+        }, 5000); 
+    }
+
+    window.closeInvite = () => {
+        const toast = document.getElementById('invite-toast');
+        toast.style.display = 'none';
+        // ลบ Invite ออกจาก DB ด้วยเพื่อไม่ให้ค้าง
+        if(currentInvite && auth.currentUser) {
+             deleteDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${currentInvite.id}`)).catch(()=>{});
+        }
+    };
+
+    window.acceptInvite = async () => {
+        if(currentInvite) {
+            // ลบแจ้งเตือน
+            await deleteDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${currentInvite.id}`));
+            // **ส่งรหัสห้องไปด้วย เพื่อให้ auto-join**
+            window.location.href = `multi.html?mode=join&room=${currentInvite.roomId}`; 
+        }
+    };
+</script>
+</body>
+</html>
