@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmonix - Friend Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --bg-app: #0F172A; --surface: #1E293B; --primary: #38BDF8; --secondary: #FACC15; --danger: #F43F5E; --success: #10B981;
+            --text-main: #F1F5F9; --text-dim: #94A3B8;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Sarabun'; background-color: var(--bg-app); margin: 0; height: 100dvh; display: flex; flex-direction: column; color: var(--text-main); overflow: hidden; }
+        
+        .bg-fixed { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 50% -20%, #1e293b 0%, #0f172a 60%, #020617 100%); }
+        
+        #navbar { flex-shrink: 0; height: 60px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .back-btn { text-decoration: none; font-weight: 700; color: var(--text-dim); display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
+        .page-title { font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--secondary); text-shadow: 0 0 10px rgba(250, 204, 21, 0.4); }
+
+        .container { flex: 1; padding: 20px; overflow-y: auto; max-width: 600px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 20px; }
+
+        /* Tabs */
+        .tab-menu { display: flex; background: #162032; padding: 5px; border-radius: 12px; gap: 5px; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: #94A3B8; font-family: 'Sarabun'; font-weight: bold; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .tab-btn.active { background: #334155; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* Sections */
+        .section { display: none; animation: fadeIn 0.3s ease; }
+        .section.active { display: flex; flex-direction: column; gap: 10px; }
+
+        /* Cards */
+        .user-card { background: #1E293B; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid #334155; transition: 0.2s; }
+        .u-avatar { width: 45px; height: 45px; border-radius: 50%; background: #000; border: 2px solid #334155; position: relative; }
+        .status-dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; background: #64748B; border-radius: 50%; border: 2px solid #1E293B; z-index: 2; }
+        .status-dot.online { background: var(--success); box-shadow: 0 0 5px var(--success); }
+        
+        .u-info { flex: 1; min-width: 0; }
+        .u-name { font-weight: bold; font-size: 1rem; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .u-desc { font-size: 0.8rem; color: #94A3B8; }
+
+        .btn-sm { padding: 8px 14px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: bold; cursor: pointer; margin-left: 5px; transition: 0.1s; }
+        .btn-sm:active { transform: scale(0.95); }
+        .btn-add { background: var(--primary); color: #0F172A; }
+        .btn-accept { background: var(--success); color: #022c22; }
+        .btn-reject { background: #334155; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-game { background: var(--secondary); color: #422006; display: flex; align-items: center; gap: 5px; }
+
+        .search-group { display: flex; gap: 10px; }
+        .inp-search { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0F172A; color: white; outline: none; }
+        .btn-action { padding: 0 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; background: var(--primary); color: #0F172A; }
+
+        .empty-msg { text-align: center; color: #64748B; margin-top: 30px; font-style: italic; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="bg-fixed"></div>
+    <div id="navbar">
+        <a href="online_hub.html" class="back-btn" onclick="playSfx('click')"><i class="fa-solid fa-arrow-left"></i> กลับ</a>
+        <div class="page-title">FRIEND CENTER</div>
+        <div style="width: 50px;"></div>
+    </div>
+
+    <div class="container">
+        <div class="tab-menu">
+            <button class="tab-btn active" onclick="switchTab('friends')">เพื่อนของฉัน</button>
+            <button class="tab-btn" onclick="switchTab('requests')">คำขอ <span id="req-badge" style="background:var(--danger); font-size:0.7rem; padding:2px 6px; border-radius:10px; display:none;">0</span></button>
+            <button class="tab-btn" onclick="switchTab('search')">เพิ่มเพื่อน</button>
+        </div>
+
+        <div id="tab-friends" class="section active">
+            <div id="friend-list-container"><div class="empty-msg"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div></div>
+        </div>
+
+        <div id="tab-requests" class="section">
+            <div id="request-list-container"><div class="empty-msg">ไม่มีคำขอเป็นเพื่อน</div></div>
+        </div>
+
+        <div id="tab-search" class="section">
+            <div class="search-group">
+                <input type="text" id="inp-search" class="inp-search" placeholder="พิมพ์ชื่อเพื่อน...">
+                <button class="btn-action" onclick="searchUser()"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            <div id="search-result" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs, setDoc, deleteDoc, onSnapshot, serverTimestamp, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff", measurementId: "G-JHVY16ZDHY" };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    let currentUser = null;
+
+    const clickSfx = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3");
+    window.playSfx = () => { clickSfx.currentTime = 0; clickSfx.play().catch(()=>{}); };
+
+    window.switchTab = (tab) => {
+        playSfx();
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById(`tab-${tab}`).classList.add('active');
+    };
+
+    onAuthStateChanged(auth, (user) => {
+        if(user) {
+            currentUser = user;
+            updateStatus();
+            setInterval(updateStatus, 60000); // Heartbeat every 1 min
+            initFriendsListener();
+            initRequestsListener();
+            initAutoAddListener();
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
+
+    const updateStatus = () => { updateDoc(doc(db, "users", currentUser.uid), { lastSeen: serverTimestamp() }); };
+
+    // --- 1. Friends List & Status ---
+    function initFriendsListener() {
+        onSnapshot(doc(db, "users", currentUser.uid), async (docSnap) => {
+            const list = document.getElementById('friend-list-container');
+            if(docSnap.exists() && docSnap.data().friends && docSnap.data().friends.length > 0) {
+                const friendsArr = docSnap.data().friends;
+                list.innerHTML = "";
+                
+                for(let f of friendsArr) {
+                    // Check status realtime
+                    let isOnline = false;
+                    try {
+                        const fSnap = await getDoc(doc(db, "users", f.uid));
+                        if(fSnap.exists() && fSnap.data().lastSeen) {
+                            const diff = Date.now() - fSnap.data().lastSeen.toMillis();
+                            if(diff < 3 * 60 * 1000) isOnline = true; // Online if active in last 3 mins
+                        }
+                    } catch(e) {}
+
+                    list.innerHTML += `
+                        <div class="user-card">
+                            <div style="position:relative;">
+                                <img src="${f.avatar}" class="u-avatar">
+                                <div class="status-dot ${isOnline?'online':''}"></div>
+                            </div>
+                            <div class="u-info">
+                                <div class="u-name">${f.name}</div>
+                                <div class="u-desc" style="color:${isOnline?'#10B981':'#64748B'}">${isOnline?'ออนไลน์':'ออฟไลน์'}</div>
+                            </div>
+                            <button class="btn-sm btn-game" onclick="inviteToGame('${f.uid}', '${f.name}')">
+                                <i class="fa-solid fa-gamepad"></i> ชวนเล่น
+                            </button>
+                        </div>`;
+                }
+            } else {
+                list.innerHTML = '<div class="empty-msg">ยังไม่มีเพื่อน (กดแถบ "เพิ่มเพื่อน" สิ)</div>';
+            }
+        });
+    }
+
+    // --- 2. Friend Requests ---
+    function initRequestsListener() {
+        onSnapshot(collection(db, `users/${currentUser.uid}/friendRequests`), (snap) => {
+            const list = document.getElementById('request-list-container');
+            const badge = document.getElementById('req-badge');
+            list.innerHTML = "";
+            
+            if(snap.empty) {
+                list.innerHTML = '<div class="empty-msg">ไม่มีคำขอเป็นเพื่อน</div>';
+                badge.style.display = 'none';
+            } else {
+                badge.innerText = snap.size;
+                badge.style.display = 'inline-block';
+                snap.forEach(d => {
+                    const req = d.data();
+                    list.innerHTML += `
+                        <div class="user-card">
+                            <img src="${req.fromAvatar}" class="u-avatar">
+                            <div class="u-info">
+                                <div class="u-name">${req.fromName}</div>
+                                <div class="u-desc">ส่งคำขอมา...</div>
+                            </div>
+                            <button class="btn-sm btn-accept" onclick="acceptFriend('${d.id}', '${req.fromName}', '${req.fromAvatar}')">รับ</button>
+                            <button class="btn-sm btn-reject" onclick="rejectFriend('${d.id}')">ปัด</button>
+                        </div>`;
+                });
+            }
+        });
+    }
+
+    // --- 3. Search & Add ---
+    window.searchUser = async () => {
+        const name = document.getElementById('inp-search').value.trim();
+        const resDiv = document.getElementById('search-result');
+        if(!name) return;
+        resDiv.innerHTML = '<div style="text-align:center;">กำลังค้นหา...</div>';
+        try {
+            const q = query(collection(db, "users"), where("displayName", "==", name));
+            const snap = await getDocs(q);
+            resDiv.innerHTML = "";
+            if(snap.empty) { resDiv.innerHTML = '<div class="empty-msg">ไม่พบผู้ใช้</div>'; return; }
+            snap.forEach(d => {
+                if(d.id === currentUser.uid) return;
+                const u = d.data();
+                resDiv.innerHTML += `
+                    <div class="user-card">
+                        <img src="${u.photoURL}" class="u-avatar">
+                        <div class="u-info"><div class="u-name">${u.displayName}</div></div>
+                        <button class="btn-sm btn-add" onclick="sendRequest('${d.id}')"><i class="fa-solid fa-plus"></i> เพิ่ม</button>
+                    </div>`;
+            });
+        } catch(e) { resDiv.innerHTML = "Error"; }
+    };
+
+    window.sendRequest = async (uid) => {
+        playSfx();
+        try {
+            await setDoc(doc(db, `users/${uid}/friendRequests`, currentUser.uid), {
+                fromUid: currentUser.uid, fromName: currentUser.displayName, fromAvatar: currentUser.photoURL, timestamp: serverTimestamp()
+            });
+            alert("ส่งคำขอแล้ว!");
+            document.getElementById('search-result').innerHTML = "";
+        } catch(e) { alert("ส่งไม่ได้"); }
+    };
+
+    window.acceptFriend = async (uid, name, avatar) => {
+        playSfx();
+        try {
+            // Add to MY list
+            await updateDoc(doc(db, "users", currentUser.uid), { friends: arrayUnion({ uid, name, avatar }) });
+            // Remove request
+            await deleteDoc(doc(db, `users/${currentUser.uid}/friendRequests`, uid));
+            // Trigger auto-add on THEIR side
+            await setDoc(doc(db, `users/${uid}/notifications`, `friend_accept_${currentUser.uid}`), {
+                type: 'friend_accepted', fromUid: currentUser.uid, fromName: currentUser.displayName, fromAvatar: currentUser.photoURL, timestamp: serverTimestamp()
+            });
+        } catch(e) { console.error(e); }
+    };
+
+    window.rejectFriend = async (uid) => {
+        playSfx();
+        await deleteDoc(doc(db, `users/${currentUser.uid}/friendRequests`, uid));
+    };
+
+    // Auto-add back when someone accepts me
+    function initAutoAddListener() {
+        onSnapshot(collection(db, `users/${currentUser.uid}/notifications`), (snap) => {
+            snap.docChanges().forEach(async change => {
+                if(change.type === "added") {
+                    const data = change.doc.data();
+                    if(data.type === 'friend_accepted') {
+                        await updateDoc(doc(db, "users", currentUser.uid), {
+                            friends: arrayUnion({ uid: data.fromUid, name: data.fromName, avatar: data.fromAvatar })
+                        });
+                        await deleteDoc(change.doc.ref);
+                    }
+                }
+            });
+        });
+    }
+
+    // --- Invite Logic ---
+    window.inviteToGame = async (uid, name) => {
+        if(!confirm(`จะชวน ${name} เล่นเกม?`)) return;
+        playSfx();
+        try {
+            const roomId = Math.floor(100000+Math.random()*900000).toString();
+            // Create Room
+            await setDoc(doc(db,"rooms",roomId), { 
+                host: currentUser.uid, status:'waiting', difficulty:'easy', qIndex:0, roundResults:{},
+                players:{[currentUser.uid]:{name:currentUser.displayName, avatar:currentUser.photoURL, score:0, uid:currentUser.uid}}, 
+                endTime:0, settings: { time:30, rounds:10 }
+            });
+            // Send Invite
+            await setDoc(doc(db, `users/${uid}/notifications`, `invite_${roomId}`), {
+                type: 'invite', fromName: currentUser.displayName, fromUid: currentUser.uid, roomId: roomId, timestamp: serverTimestamp()
+            });
+            // Go to Room
+            window.location.href = `multi.html?mode=join&room=${roomId}`;
+        } catch(e) { alert("สร้างห้องไม่สำเร็จ"); }
+    };
+</script>
+</body>
+</html>
