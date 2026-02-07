@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmony Quest: Boss Battle</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Sarabun:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- THEME: DUNGEON RPG (BOSS STYLE) --- */
+        :root { 
+            --bg-dark: #0f0505; --bg-panel: #1a0b0b; 
+            --gold: #FACC15; --blood: #EF4444; --mana: #38BDF8; --fire: #f97316;
+            --text-main: #F1F5F9;
+        }
+        
+        body { font-family: 'Sarabun', sans-serif; background: var(--bg-dark); margin: 0; height: 100dvh; display: flex; flex-direction: column; color: var(--text-main); overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        .bg-fixed { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, #2a0e0e 0%, #000 100%); }
+
+        /* --- CHAT LOG STYLES (NEW FIXED) --- */
+        .chat-log-container {
+            position: fixed; pointer-events: none; z-index: 100;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            align-items: flex-start; gap: 4px;
+            overflow: hidden;
+            /* เงาไล่สีด้านบนเพื่อให้ข้อความเก่าจางลง */
+            mask-image: linear-gradient(to top, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to top, black 80%, transparent 100%);
+        }
+
+        /* 1. LOBBY CHAT POSITION */
+        .chat-lobby {
+            bottom: 70px; left: 15px; width: 350px; height: 300px;
+        }
+
+        /* 2. GAME CHAT POSITION (เหนือ Control Panel) */
+        .chat-game {
+            bottom: 250px; left: 15px; width: 300px; height: 250px;
+        }
+
+        .q-msg {
+            background: rgba(0,0,0,0.5); /* พื้นหลังดำจางๆ ให้อ่านออก */
+            color: rgba(255, 255, 255, 0.95);
+            padding: 4px 8px; border-radius: 6px;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 0 #000;
+            animation: slideIn 0.2s ease-out;
+            max-width: 100%; word-wrap: break-word;
+            border-left: 2px solid var(--gold); /* เส้นสีทองข้างหน้า */
+        }
+        .q-msg b { color: var(--gold); margin-right: 5px; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* INPUT BAR STYLES */
+        /* Lobby Input (Fixed Bottom) */
+        .lobby-input-bar {
+            position: fixed; bottom: 15px; left: 15px; right: 15px; z-index: 200;
+            display: flex; gap: 8px; max-width: 600px; margin: 0 auto;
+            background: rgba(0,0,0,0.8); padding: 8px; border-radius: 25px; border: 1px solid #334155;
+        }
+        
+        /* Game Input (Embedded in Control Panel) */
+        .game-input-bar {
+            display: flex; gap: 8px; margin-bottom: 8px;
+            background: rgba(0,0,0,0.6); padding: 5px; border-radius: 12px; border: 1px solid #334155;
+            width: 100%; box-sizing: border-box;
+        }
+
+        .chat-input {
+            flex: 1; background: transparent; border: none; color: white; 
+            padding: 5px 10px; outline: none; font-family: 'Sarabun'; font-size: 0.95rem;
+        }
+        .chat-send-btn {
+            background: var(--gold); color: #422006; border: none;
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .chat-send-btn:active { transform: scale(0.9); }
+
+        /* --- UI: LOBBY SCREEN --- */
+        #lobby-screen { 
+            position: absolute; inset: 0; z-index: 50; 
+            background: rgba(15, 5, 5, 0.95); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; transition: 0.5s;
+            padding-bottom: 80px; 
+        }
+        #lobby-screen.hidden { opacity: 0; pointer-events: none; transform: scale(1.1); }
+
+        .lobby-title { font-family: 'Cinzel'; font-size: 2.5rem; color: var(--gold); text-shadow: 0 0 20px rgba(250, 204, 21, 0.5); margin-bottom: 5px; text-align: center; }
+        .room-code-box { background: rgba(255,255,255,0.1); padding: 5px 20px; border-radius: 12px; font-family: 'Cinzel'; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 15px; border: 1px solid var(--gold); color: white; }
+
+        /* Difficulty Selector */
+        .diff-selector { margin-bottom: 15px; display: flex; gap: 10px; background: #333; padding: 5px; border-radius: 10px; border: 1px solid #555; }
+        .diff-btn { background: none; border: none; color: #aaa; padding: 8px 15px; cursor: pointer; border-radius: 8px; font-weight: bold; font-family: 'Cinzel'; transition: 0.2s; }
+        .diff-btn.active { background: var(--gold); color: #000; box-shadow: 0 0 10px rgba(250,204,21,0.5); }
+        .diff-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+
+        .char-select-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 500px; margin-bottom: 15px; }
+        @media (min-width: 600px) { .char-select-grid { grid-template-columns: repeat(4, 1fr); } }
+
+        .char-card { background: #1e1b1b; border: 2px solid #3f1010; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 120px; }
+        .char-card:hover { border-color: var(--gold); transform: translateY(-5px); }
+        .char-card.selected { border-color: var(--mana); background: rgba(56, 189, 248, 0.1); box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+        .char-card.taken { opacity: 0.6; pointer-events: none; border-color: #555; background: #111; }
+        .char-icon { font-size: 2.5rem; margin-bottom: 5px; }
+        .char-role { font-family: 'Cinzel'; font-weight: bold; font-size: 0.9rem; color: var(--gold); }
+        .player-badge { margin-top: auto; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 20px; font-size: 0.75rem; }
+        .player-avatar { width: 20px; height: 20px; border-radius: 50%; }
+
+        .lobby-actions { display: flex; gap: 15px; width: 100%; max-width: 400px; }
+        .btn-lobby { flex: 1; padding: 15px; border-radius: 12px; border: none; font-family: 'Cinzel'; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .btn-invite { background: #334155; color: white; border: 1px solid #475569; }
+        .btn-start { background: #333; color: #777; box-shadow: none; cursor: not-allowed; opacity: 0.6; }
+        .btn-start.ready { background: linear-gradient(to right, #FACC15, #EAB308); color: #422006; box-shadow: 0 0 20px rgba(250, 204, 21, 0.4); opacity: 1; cursor: pointer; }
+        .btn-start.ready:hover { transform: scale(1.05); }
+
+        /* --- UI: GAME SCREEN --- */
+        #game-screen { flex: 1; display: flex; flex-direction: column; transition: 0.5s; opacity: 1; height: 100%; position: relative; }
+        #game-screen.blur { filter: blur(10px); }
+
+        #top-bar { height: 60px; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; background: rgba(20, 5, 5, 0.9); border-bottom: 2px solid #3f1010; z-index: 10; }
+        .back-btn { color: #9ca3af; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+
+        #arena { flex-shrink: 0; background: radial-gradient(circle at center, #2a0e0e 0%, #0f0505 100%); padding: 15px; text-align: center; position: relative; border-bottom: 1px solid #3f1010; }
+        .boss-container { position: relative; height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
+        .boss-sprite { font-size: 5rem; filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.4)); animation: floatBoss 3s ease-in-out infinite; z-index: 2; transition: transform 0.5s; }
+        .boss-sprite.hit { animation: shake 0.5s; filter: hue-rotate(90deg) brightness(1.5); }
+        .boss-sprite.dead { animation: bossDie 2s forwards; }
+        
+        @keyframes bossDie { 0% { transform: scale(1); filter: hue-rotate(0deg); opacity: 1; } 100% { transform: scale(0) translateY(-50px); filter: hue-rotate(270deg) blur(20px); opacity: 0; } }
+        @keyframes floatBoss { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 25% { transform: translate(-3px, 0px); } 75% { transform: translate(3px, 1px); } 100% { transform: translate(1px, -2px); } }
+
+        .bars-wrapper { display: flex; gap: 20px; justify-content: center; width: 100%; max-width: 600px; margin: 0 auto; }
+        .bar-group { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+        .bar-label { font-size: 0.7rem; font-weight: bold; color: #9ca3af; display: flex; justify-content: space-between; }
+        .hp-track { height: 12px; background: #333; border-radius: 6px; overflow: hidden; border: 1px solid #555; position: relative; }
+        .hp-fill { height: 100%; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fill-boss { background: var(--blood); box-shadow: 0 0 10px var(--blood); }
+        .fill-party { background: var(--mana); box-shadow: 0 0 10px var(--mana); }
+        .damage-text { position: absolute; font-weight: 900; font-size: 1.5rem; color: #fff; text-shadow: 0 0 5px red; pointer-events: none; animation: floatUp 1s forwards; opacity: 0; top: 40%; left: 50%; z-index: 100; }
+        @keyframes floatUp { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -50px); opacity: 0; } }
+
+        .quest-box { background: rgba(0,0,0,0.5); border: 1px solid #555; border-radius: 8px; padding: 5px 15px; display: inline-block; margin-top: 5px; }
+        .q-key { font-family: 'Cinzel'; color: var(--gold); font-size: 1.2rem; margin-right: 10px; }
+        .q-roman { font-family: 'Cinzel'; color: var(--mana); font-size: 1.5rem; font-weight: bold; }
+        .inversion-text { display: block; font-size: 0.8rem; color: #bbb; margin-top: 2px; font-style: italic; }
+
+        /* SCORE AREA */
+        #score-area { flex: 1; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #2a0e0e 0%, #0f0505 100%); position: relative; min-height: 0; overflow: hidden; border-top: 1px solid #3f1010; border-bottom: 1px solid #3f1010; }
+        #vexflow-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; }
+        #vexflow-out { filter: invert(100%) opacity(0.9); }
+        .fire-bg { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+        .fire-glow { position: absolute; bottom: 0; left: 0; width: 100%; height: 80px; background: linear-gradient(to top, rgba(255, 69, 0, 0.2), transparent); }
+        .fire-particle { position: absolute; bottom: -20px; width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 200, 0, 0.8); box-shadow: 0 0 10px 2px rgba(255, 69, 0, 0.6); opacity: 0; animation: riseFire 3s infinite linear; }
+        @keyframes riseFire { 0% { transform: translateY(0) scale(1); opacity: 0; background: #fff700; } 20% { opacity: 0.8; background: #ff8c00; } 100% { transform: translateY(-150px) scale(0); opacity: 0; background: #ff0000; } }
+
+        /* CONTROLS */
+        #controls { flex-shrink: 0; background: var(--bg-panel); border-top: 2px solid #3f1010; padding: 10px 15px; padding-bottom: max(20px, env(safe-area-inset-bottom)); position: relative; z-index: 20; }
+        .role-badge { text-align: center; margin-bottom: 5px; font-size: 0.8rem; color: var(--gold); }
+        .note-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 10px; }
+        .btn-n { background: #2d1b1b; border: 1px solid #4a2b2b; color: #d1d5db; height: 45px; border-radius: 8px; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: 0.1s; box-shadow: 0 3px 0 #150a0a; }
+        .btn-n:active { transform: translateY(3px); box-shadow: none; }
+        .btn-n.active { background: var(--mana); color: #0f172a; border-color: #0ea5e9; box-shadow: 0 3px 0 #0369a1; }
+        .tool-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .btn-tool { background: #333; border: none; color: white; border-radius: 6px; height: 35px; cursor: pointer; box-shadow: 0 3px 0 #111; }
+        .btn-tool:active { transform: translateY(3px); box-shadow: none; }
+        .btn-cast { grid-column: span 5; background: linear-gradient(to right, #7c3aed, #c084fc); color: white; font-family: 'Cinzel'; font-weight: bold; font-size: 1.1rem; margin-top: 5px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); box-shadow: 0 4px 0 #5b21b6; border: 1px solid #8b5cf6; }
+        .btn-cast:active { transform: translateY(4px); box-shadow: none; }
+
+        /* MODALS */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal.hidden { display: none !important; }
+        .modal-box { background: #1E293B; width: 90%; max-width: 350px; border-radius: 16px; border: 1px solid #334155; padding: 20px; display: flex; flex-direction: column; max-height: 80vh; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; color: var(--gold); font-family: 'Cinzel'; font-size: 1.2rem; }
+        .friend-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .f-item { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; }
+        .f-btn { margin-left: auto; background: var(--mana); border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; color: #000; font-weight: bold; font-size: 0.8rem; }
+        .end-box { text-align:center; background:#1a0b0b; padding:30px; border:2px solid #3f1010; border-radius:16px; width: 90%; max-width: 400px; z-index: 101; position: relative; }
+        #loader { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; align-items: center; justify-content: center; color: var(--gold); font-family: 'Cinzel'; font-size: 1.5rem; }
+        .hidden { display: none !important; }
+        #mute-btn { position: fixed; top: 15px; right: 15px; z-index: 200; background: rgba(0,0,0,0.5); border: 1px solid #555; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-fixed"></div>
+    <button id="mute-btn" onclick="toggleMute()"><i class="fa-solid fa-volume-high" id="mute-icon"></i></button>
+
+    <div id="loader">ENTERING DUNGEON...</div>
+
+    <div id="quick-chat-container" class="chat-log-container chat-lobby"></div>
+
+    <div id="lobby-screen">
+        <div class="lobby-title">HARMONY QUEST</div>
+        <div style="color: #94a3b8; margin-bottom: 10px;">ROOM ID</div>
+        <div class="room-code-box" id="lobby-room-id">...</div>
+        
+        <div class="diff-selector">
+            <button class="diff-btn active" id="diff-easy" onclick="setDiff('easy')">EASY</button>
+            <button class="diff-btn" id="diff-normal" onclick="setDiff('normal')">NORMAL</button>
+            <button class="diff-btn" id="diff-hard" onclick="setDiff('hard')">HARD</button>
+        </div>
+
+        <div style="color: var(--gold); margin-bottom: 10px; font-weight: bold;">เลือกตำแหน่งของคุณ</div>
+        <div class="char-select-grid">
+            <div class="char-card" id="card-s" onclick="selectRole('s')"><div class="char-icon">🧙‍♀️</div><div class="char-role">Soprano</div><div class="player-badge hidden" id="badge-s"></div></div>
+            <div class="char-card" id="card-a" onclick="selectRole('a')"><div class="char-icon">🧝‍♀️</div><div class="char-role">Alto</div><div class="player-badge hidden" id="badge-a"></div></div>
+            <div class="char-card" id="card-t" onclick="selectRole('t')"><div class="char-icon">⚔️</div><div class="char-role">Tenor</div><div class="player-badge hidden" id="badge-t"></div></div>
+            <div class="char-card" id="card-b" onclick="selectRole('b')"><div class="char-icon">🛡️</div><div class="char-role">Bass</div><div class="player-badge hidden" id="badge-b"></div></div>
+        </div>
+        
+        <div class="lobby-actions">
+            <button class="btn-lobby btn-invite" onclick="openInviteModal()"><i class="fa-solid fa-user-plus"></i> เชิญเพื่อน</button>
+            <button class="btn-lobby btn-start" id="btn-start-game" onclick="tryStartGame()">Waiting...</button>
+        </div>
+
+        <div style="margin-top: 5px; color: #64748B; font-size: 0.8rem;">*ทุกคนในห้องต้องเลือกตำแหน่งให้ครบ</div>
+        <a href="online_hub.html" style="margin-top: 15px; color: #EF4444; text-decoration: none;">ออกจากห้อง</a>
+
+        <div class="lobby-input-bar">
+            <input type="text" class="chat-input" id="chat-input-1" placeholder="คุยกับเพื่อน..." onkeypress="handleChatEnter('chat-input-1', event)">
+            <button class="chat-send-btn" onclick="sendMsg('chat-input-1')"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="hidden">
+        <div id="top-bar">
+            <a href="online_hub.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i> ออก</a>
+            <div style="font-family:'Cinzel'; color:var(--gold);">LEVEL <span id="lvl-disp">1</span></div>
+            <div></div> 
+        </div>
+        <div id="arena">
+            <div class="boss-container"><div id="boss-img" class="boss-sprite">👹</div></div>
+            <div class="bars-wrapper">
+                <div class="bar-group"><div class="bar-label"><span>BOSS</span> <span id="boss-hp-text">100%</span></div><div class="hp-track"><div id="boss-hp-bar" class="hp-fill fill-boss" style="width: 100%;"></div></div></div>
+                <div class="bar-group"><div class="bar-label"><span>PARTY</span> <span id="party-hp-text">5/5</span></div><div class="hp-track"><div id="party-hp-bar" class="hp-fill fill-party" style="width: 100%;"></div></div></div>
+            </div>
+            <div class="quest-box">
+                <span class="q-key">Key: <span id="key-disp">?</span></span>
+                <span class="q-roman" id="roman-disp">?</span>
+                <span class="inversion-text" id="inv-disp">Root Position</span>
+            </div>
+        </div>
+        <div id="score-area">
+            <div class="fire-bg" id="fire-bg"><div class="fire-glow"></div></div>
+            <div id="vexflow-wrapper"><div id="vexflow-out"></div></div>
+        </div>
+        <div id="damage-popup" class="damage-text hidden">-20</div>
+        
+        <div id="controls">
+            <div class="game-input-bar">
+                <input type="text" class="chat-input" id="chat-input-2" placeholder="คุยกับปาร์ตี้..." onkeypress="handleChatEnter('chat-input-2', event)">
+                <button class="chat-send-btn" onclick="sendMsg('chat-input-2')"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+
+            <div class="role-badge" id="role-status">Spectator Mode</div>
+            <div id="active-controls">
+                <div class="note-grid">
+                    <button class="btn-n" onclick="setNote('c')" id="n-c">C</button><button class="btn-n" onclick="setNote('d')" id="n-d">D</button><button class="btn-n" onclick="setNote('e')" id="n-e">E</button>
+                    <button class="btn-n" onclick="setNote('f')" id="n-f">F</button><button class="btn-n" onclick="setNote('g')" id="n-g">G</button><button class="btn-n" onclick="setNote('a')" id="n-a">A</button><button class="btn-n" onclick="setNote('b')" id="n-b">B</button>
+                </div>
+                <div class="tool-grid">
+                    <button class="btn-tool" onclick="setAcc('#')" style="color:var(--gold)">♯</button><button class="btn-tool" onclick="setAcc('n')">♮</button><button class="btn-tool" onclick="setAcc('b')" style="color:var(--mana)">♭</button>
+                    <button class="btn-tool" onclick="shiftOct(1)">Oct+</button><button class="btn-tool" onclick="shiftOct(-1)">Oct-</button>
+                    <button class="btn-tool btn-cast" onclick="castSpell()">CAST SPELL 🪄</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="invite-modal" class="modal hidden">
+        <div class="modal-box">
+            <div class="modal-header"><span>INVITE FRIEND</span><button onclick="document.getElementById('invite-modal').classList.add('hidden')" style="background:none; border:none; color:#fff;"><i class="fa-solid fa-xmark"></i></button></div>
+            <div id="invite-list" class="friend-list"><div style="text-align:center; color:#666;">กำลังโหลด...</div></div>
+        </div>
+    </div>
+    <div id="end-modal" class="modal hidden">
+        <div class="end-box">
+            <h1 id="end-title" style="font-family:'Cinzel'; font-size:2.5rem; margin:0 0 10px 0;">VICTORY</h1>
+            <p id="end-desc" style="color:#9ca3af;">บอสถูกกำจัดแล้ว!</p>
+            <button id="btn-rematch" onclick="rematchGame()" class="btn-tool" style="width:100%; height:45px; background:var(--gold); color:#000; font-weight:bold; margin-top:20px;">เล่นใหม่ (Rematch)</button>
+            <a href="online_hub.html" style="display:block; margin-top:15px; color:#94a3b8;">กลับหน้าหลัก</a>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, addDoc, collection, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff" };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // QUESTS DB
+    const ALL_QUESTS = [
+        { diff:'easy', k:'C', r:'I', sol:{ s:{n:'c',o:5}, a:{n:'g',o:4}, t:{n:'e',o:4}, b:{n:'c',o:3} } }, 
+        { diff:'easy', k:'G', r:'V', sol:{ s:{n:'d',o:5}, a:{n:'b',o:4}, t:{n:'g',o:4}, b:{n:'d',o:3} } }, 
+        { diff:'easy', k:'F', r:'IV', sol:{ s:{n:'f',o:4}, a:{n:'c',o:4}, t:{n:'a',o:3}, b:{n:'b',o:2,acc:'b'} } }, 
+        { diff:'easy', k:'D', r:'I', sol:{ s:{n:'f',o:4,acc:'#'}, a:{n:'d',o:4}, t:{n:'a',o:3}, b:{n:'d',o:3} } },
+        { diff:'easy', k:'Am', r:'i', sol:{ s:{n:'c',o:5}, a:{n:'a',o:4}, t:{n:'e',o:4}, b:{n:'a',o:2} } },
+        { diff:'easy', k:'Em', r:'i', sol:{ s:{n:'g',o:4}, a:{n:'e',o:4}, t:{n:'b',o:3}, b:{n:'e',o:3} } },
+
+        { diff:'normal', k:'C', r:'I6', sol:{ s:{n:'g',o:4}, a:{n:'c',o:4}, t:{n:'g',o:3}, b:{n:'e',o:3} } }, 
+        { diff:'normal', k:'F', r:'V6', sol:{ s:{n:'g',o:4}, a:{n:'c',o:4}, t:{n:'e',o:3}, b:{n:'e',o:2} } },
+        { diff:'normal', k:'G', r:'IV64', sol:{ s:{n:'c',o:5}, a:{n:'g',o:4}, t:{n:'e',o:4}, b:{n:'g',o:3} } },
+        { diff:'normal', k:'D', r:'IV', sol:{ s:{n:'g',o:4}, a:{n:'d',o:4}, t:{n:'b',o:3}, b:{n:'g',o:3} } },
+        { diff:'normal', k:'Cm', r:'V', sol:{ s:{n:'g',o:4}, a:{n:'d',o:4}, t:{n:'b',o:3}, b:{n:'g',o:2} } }, 
+        { diff:'normal', k:'Bb', r:'I', sol:{ s:{n:'d',o:5}, a:{n:'b',o:4,acc:'b'}, t:{n:'f',o:4}, b:{n:'b',o:2,acc:'b'} } },
+
+        { diff:'hard', k:'C', r:'V7', sol:{ s:{n:'f',o:4}, a:{n:'d',o:4}, t:{n:'b',o:3}, b:{n:'g',o:3} } }, 
+        { diff:'hard', k:'G', r:'V65', sol:{ s:{n:'c',o:5}, a:{n:'a',o:4}, t:{n:'f',o:4,acc:'#'}, b:{n:'d',o:3} } },
+        { diff:'hard', k:'Ab', r:'V', sol:{ s:{n:'e',o:5,acc:'b'}, a:{n:'c',o:5}, t:{n:'a',o:4,acc:'b'}, b:{n:'e',o:3,acc:'b'} } },
+        { diff:'hard', k:'E', r:'I', sol:{ s:{n:'g',o:4,acc:'#'}, a:{n:'e',o:4}, t:{n:'b',o:3}, b:{n:'e',o:3} } },
+        { diff:'hard', k:'Bm', r:'i', sol:{ s:{n:'d',o:5}, a:{n:'b',o:4}, t:{n:'f',o:4,acc:'#'}, b:{n:'b',o:2} } },
+        { diff:'hard', k:'Eb', r:'IV', sol:{ s:{n:'g',o:4}, a:{n:'e',o:4}, t:{n:'b',o:3}, b:{n:'a',o:2,acc:'b'} } }
+    ];
+
+    let currentUser = null, roomId = null, myRole = null, currentSlots = {}, currentQuest = null, roomHostId = null, isGameStarted = false, isMuted = false;
+    const sfx = { click: new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"), cast: new Audio("https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"), hit: new Audio("https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3"), win: new Audio("https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3") };
+    window.playSfx = (k) => { if(!isMuted) try{sfx[k].currentTime=0;sfx[k].play().catch(()=>{});}catch(e){} };
+    window.toggleMute = () => { isMuted = !isMuted; document.getElementById('mute-icon').className = isMuted ? "fa-solid fa-volume-xmark" : "fa-solid fa-volume-high"; };
+
+    onAuthStateChanged(auth, async (user) => {
+        if(user) {
+            currentUser = user;
+            const params = new URLSearchParams(window.location.search);
+            roomId = params.get('room');
+            generateFire();
+            startGlobalHeartbeat();
+            
+            if(!roomId) await createRoom();
+            else await joinRoom(roomId);
+            
+            initRoomChat();
+        } else {
+            window.location.href = 'index.html';
+        }
+    });
+
+    function generateFire() {
+        const bg = document.getElementById('fire-bg');
+        for(let i=0; i<30; i++) {
+            const p = document.createElement('div');
+            p.className = 'fire-particle';
+            p.style.left = Math.random()*100 + '%';
+            p.style.animationDuration = (1 + Math.random()*2) + 's';
+            p.style.animationDelay = Math.random()*2 + 's';
+            bg.appendChild(p);
+        }
+    }
+
+    async function createRoom() {
+        roomId = Math.floor(100000 + Math.random() * 900000).toString();
+        await setDoc(doc(db, "rooms", roomId), {
+            host: currentUser.uid, status: "waiting", difficulty: "easy", bossHP: 100, partyHP: 5, roles: {}, players: { [currentUser.uid]: { name: currentUser.displayName, avatar: currentUser.photoURL } }, qIdx: 0, slots: { s: {n:'c',o:5}, a: {n:'c',o:4}, t: {n:'c',o:4}, b: {n:'c',o:3} }
+        });
+        window.history.replaceState(null, null, `?room=${roomId}`);
+        listenRoom();
+    }
+
+    async function joinRoom(id) {
+        const ref = doc(db, "rooms", id);
+        const snap = await getDoc(ref);
+        if(snap.exists()) {
+            const players = snap.data().players || {};
+            if(Object.keys(players).length >= 4 && !players[currentUser.uid]) { alert("ห้องเต็มแล้ว"); window.location.href = 'online_hub.html'; return; }
+            await updateDoc(ref, { [`players.${currentUser.uid}`]: { name: currentUser.displayName, avatar: currentUser.photoURL } });
+            listenRoom();
+        } else {
+            alert("ไม่พบห้องนี้"); window.location.href = 'online_hub.html';
+        }
+    }
+
+    function listenRoom() {
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('lobby-room-id').innerText = roomId;
+        onSnapshot(doc(db, "rooms", roomId), (snap) => {
+            const data = snap.data();
+            if(!data) return;
+            roomHostId = data.host;
+            updateLobbyUI(data);
+            if(data.status === 'playing' && !isGameStarted) enterGameMode(data);
+            if(data.status === 'waiting' && isGameStarted) resetToLobby();
+            if(isGameStarted) {
+                if(data.bossHP <= 0) endGame(true); else if(data.partyHP <= 0) endGame(false);
+                updateBars(data.bossHP, data.partyHP);
+                const q = ALL_QUESTS[data.qIdx] || ALL_QUESTS[0];
+                currentQuest = q;
+                document.getElementById('key-disp').innerText = q.k;
+                document.getElementById('roman-disp').innerText = q.r;
+                document.getElementById('lvl-disp').innerText = "Battle";
+                document.getElementById('inv-disp').innerText = getInversionName(q.r);
+                currentSlots = data.slots;
+                const displaySlots = {...data.slots};
+                ['s','a','t','b'].forEach(v => { if(data.roles[v] === 'BOT') displaySlots[v] = { ...q.sol[v], acc: q.sol[v].acc||'' }; });
+                renderScore(q.k, displaySlots, data.roles);
+            }
+        });
+    }
+
+    window.setDiff = async (diff) => {
+        if(currentUser.uid !== roomHostId) return;
+        playSfx('click');
+        await updateDoc(doc(db, "rooms", roomId), { difficulty: diff });
+    };
+
+    function updateLobbyUI(data) {
+        ['easy','normal','hard'].forEach(d => {
+            const btn = document.getElementById(`diff-${d}`);
+            if(data.difficulty === d) btn.classList.add('active');
+            else btn.classList.remove('active');
+            btn.disabled = (currentUser.uid !== roomHostId); 
+        });
+
+        const players = data.players || {};
+        const roles = data.roles || {};
+        const playerCount = Object.keys(players).length;
+        const roleCount = Object.keys(roles).filter(k => roles[k] !== 'BOT').length; 
+
+        const btnStart = document.getElementById('btn-start-game');
+        if(currentUser.uid === data.host) {
+            if(roleCount >= playerCount && roleCount > 0) {
+                btnStart.classList.add('ready'); btnStart.disabled = false; btnStart.innerText = "START GAME ⚔️";
+            } else {
+                btnStart.classList.remove('ready'); btnStart.disabled = true; btnStart.innerText = `Waiting for players (${roleCount}/${playerCount})`;
+            }
+        } else {
+            btnStart.classList.remove('ready'); btnStart.disabled = true; btnStart.innerText = "Waiting for Host...";
+        }
+        
+        ['s','a','t','b'].forEach(r => {
+            const card = document.getElementById(`card-${r}`);
+            const badge = document.getElementById(`badge-${r}`);
+            const ownerUid = data.roles[r];
+            if(ownerUid && ownerUid !== 'BOT') {
+                const player = data.players[ownerUid];
+                card.classList.add('taken'); card.classList.remove('selected');
+                if(player) { badge.innerHTML = `<img src="${player.avatar}" class="player-avatar"> ${player.name.split(' ')[0]}`; badge.classList.remove('hidden'); }
+                if(ownerUid === currentUser.uid) { myRole = r; card.classList.add('selected'); card.classList.remove('taken'); }
+            } else {
+                card.classList.remove('taken', 'selected'); badge.classList.add('hidden');
+            }
+        });
+    }
+
+    window.selectRole = async (targetRole) => {
+        if(isGameStarted) return;
+        playSfx('click');
+        const roomRef = doc(db, "rooms", roomId);
+        const snap = await getDoc(roomRef);
+        let currentRoles = snap.data().roles || {};
+        if (currentRoles[targetRole] && currentRoles[targetRole] !== currentUser.uid) { alert("ตำแหน่งนี้มีคนเลือกไปแล้ว!"); return; }
+        Object.keys(currentRoles).forEach(key => { if (currentRoles[key] === currentUser.uid) delete currentRoles[key]; });
+        currentRoles[targetRole] = currentUser.uid;
+        await updateDoc(roomRef, { roles: currentRoles });
+    };
+
+    window.tryStartGame = async () => {
+        if(currentUser.uid !== roomHostId) return;
+        if(!myRole) { alert("Host ต้องเลือกตำแหน่งก่อนเริ่ม!"); return; } 
+        playSfx('click');
+        const roomRef = doc(db, "rooms", roomId);
+        const snap = await getDoc(roomRef);
+        const data = snap.data();
+        const currentRoles = data.roles || {};
+        ['s','a','t','b'].forEach(r => { if(!currentRoles[r]) currentRoles[r] = 'BOT'; });
+        const diff = data.difficulty || 'easy';
+        const startQ = ALL_QUESTS.findIndex(q => q.diff === diff);
+        const validStart = startQ !== -1 ? startQ : 0;
+        await updateDoc(roomRef, { status: 'playing', roles: currentRoles, qIdx: validStart, bossHP: 100, partyHP: 5 });
+    };
+
+    function enterGameMode(data) {
+        isGameStarted = true;
+        document.getElementById('lobby-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        document.getElementById('quick-chat-container').classList.remove('chat-lobby');
+        document.getElementById('quick-chat-container').classList.add('chat-game');
+        if(myRole) { document.getElementById('role-status').innerText = `คุณรับบท: ${getRoleName(myRole)}`; document.getElementById('controls').style.display = 'block'; }
+        else { document.getElementById('controls').style.display = 'none'; }
+    }
+    
+    function resetToLobby() {
+        isGameStarted = false; myRole = null;
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('blur');
+        document.getElementById('end-modal').classList.add('hidden');
+        document.getElementById('lobby-screen').classList.remove('hidden');
+        document.getElementById('boss-img').classList.remove('dead');
+        document.getElementById('quick-chat-container').classList.remove('chat-game');
+        document.getElementById('quick-chat-container').classList.add('chat-lobby');
+    }
+
+    function getRoleName(r) { return {s:"Soprano", a:"Alto", t:"Tenor", b:"Bass"}[r]; }
+    function getInversionName(r) {
+        if(r.includes("64")) return "2nd Inversion";
+        if(r.includes("65")) return "1st Inversion (7th)";
+        if(r.includes("43")) return "2nd Inversion (7th)";
+        if(r.includes("42") || r.includes("2")) return "3rd Inversion (7th)";
+        if(r.includes("6")) return "1st Inversion";
+        if(r.includes("7")) return "Root Position (7th)";
+        return "Root Position";
+    }
+
+    window.rematchGame = async () => {
+        playSfx('click');
+        await updateDoc(doc(db, "rooms", roomId), { status: 'waiting', bossHP: 100, partyHP: 5, roles: {}, qIdx: 0, slots: { s: {n:'c',o:5}, a: {n:'c',o:4}, t: {n:'c',o:4}, b: {n:'c',o:3} } });
+    };
+
+    window.setNote = async (n) => { if(!myRole) return; playSfx('click'); await updateDoc(doc(db, "rooms", roomId), { [`slots.${myRole}.n`]: n, [`slots.${myRole}.acc`]: '' }); updateControlUI(); };
+    window.setAcc = async (acc) => { if(!myRole) return; playSfx('click'); const currentAcc = currentSlots[myRole].acc; const newAcc = (currentAcc === acc) ? '' : acc; await updateDoc(doc(db, "rooms", roomId), { [`slots.${myRole}.acc`]: newAcc }); };
+    window.shiftOct = async (dir) => { if(!myRole) return; playSfx('click'); let newOct = currentSlots[myRole].o + dir; if(newOct < 2) newOct = 2; if(newOct > 6) newOct = 6; await updateDoc(doc(db, "rooms", roomId), { [`slots.${myRole}.o`]: newOct }); };
+    function updateControlUI() { if(!myRole || !currentSlots[myRole]) return; const n = currentSlots[myRole].n; document.querySelectorAll('.btn-n').forEach(b => { b.classList.toggle('active', b.id === `n-${n}`); }); }
+
+    window.castSpell = async () => {
+        if(!myRole) return;
+        const sol = currentQuest.sol; let correct = true;
+        const roomRef = doc(db, "rooms", roomId);
+        const roomSnap = await getDoc(roomRef);
+        const data = roomSnap.data();
+        const rolesMap = data.roles;
+        ['s','a','t','b'].forEach(v => {
+            let userN = currentSlots[v];
+            if(rolesMap[v] === 'BOT') userN = { ...sol[v], acc: sol[v].acc || '' };
+            const solN = sol[v]; const uAcc = userN.acc || ''; const sAcc = solN.acc || '';
+            if(userN.n !== solN.n || userN.o !== solN.o || uAcc !== sAcc) correct = false;
+        });
+        if(correct) {
+            playSfx('cast'); showDamage(20, 'boss');
+            const currentDiff = data.difficulty || 'easy';
+            let nextQIdx = (data.qIdx + 1) % ALL_QUESTS.length;
+            let attempts = 0;
+            while(ALL_QUESTS[nextQIdx].diff !== currentDiff && attempts < ALL_QUESTS.length) { nextQIdx = (nextQIdx + 1) % ALL_QUESTS.length; attempts++; }
+            await updateDoc(roomRef, { bossHP: Math.max(0, data.bossHP - 20), qIdx: nextQIdx });
+        } else {
+            playSfx('hit'); showDamage(1, 'party');
+            document.body.style.animation = "shake 0.5s"; setTimeout(()=>document.body.style.animation="", 500);
+            await updateDoc(roomRef, { partyHP: Math.max(0, data.partyHP - 1) });
+        }
+    };
+
+    function showDamage(val, target) {
+        const popup = document.getElementById('damage-popup');
+        popup.innerText = `-${val}`; popup.style.color = target === 'boss' ? '#ef4444' : '#38bdf8';
+        popup.classList.remove('hidden'); popup.style.animation = 'none'; popup.offsetHeight; popup.style.animation = 'floatUp 1s forwards';
+        if(target === 'boss') document.getElementById('boss-img').classList.add('hit');
+        setTimeout(() => document.getElementById('boss-img').classList.remove('hit'), 500);
+    }
+
+    function updateBars(boss, party) {
+        document.getElementById('boss-hp-bar').style.width = `${boss}%`; document.getElementById('boss-hp-text').innerText = `${boss}%`;
+        document.getElementById('party-hp-bar').style.width = `${(party/5)*100}%`; document.getElementById('party-hp-text').innerText = `${party}/5`;
+    }
+
+    function endGame(win) {
+        const modal = document.getElementById('end-modal');
+        const title = document.getElementById('end-title');
+        const desc = document.getElementById('end-desc');
+        const btn = document.getElementById('btn-rematch');
+        if(currentUser.uid !== roomHostId) { btn.innerText = "รอหัวหน้าห้องเริ่มใหม่..."; btn.disabled = true; btn.style.opacity = 0.5; }
+        else { btn.innerText = "เล่นใหม่ (Rematch)"; btn.disabled = false; btn.style.opacity = 1; }
+        
+        if(win) {
+            document.getElementById('boss-img').classList.add('dead'); 
+            setTimeout(() => {
+                modal.classList.remove('hidden'); document.getElementById('game-screen').classList.add('blur');
+                title.innerText = "VICTORY!"; title.style.color = "var(--gold)"; desc.innerText = "บอสถูกกำจัดแล้ว!"; playSfx('win');
+            }, 1500);
+        } else {
+            modal.classList.remove('hidden'); document.getElementById('game-screen').classList.add('blur');
+            title.innerText = "DEFEAT"; title.style.color = "var(--blood)"; desc.innerText = "ปาร์ตี้ของคุณพ่ายแพ้...";
+        }
+    }
+
+    function renderScore(key, slots, roles) {
+        const div = document.getElementById("vexflow-out"); div.innerHTML = "";
+        const VF = Vex.Flow; const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
+        renderer.resize(300, 250); const ctx = renderer.getContext(); ctx.scale(1.2, 1.2);
+        const sT = new VF.Stave(10, 10, 230); sT.addClef("treble").addTimeSignature("4/4"); if(key) sT.addKeySignature(key); sT.setContext(ctx).draw();
+        const sB = new VF.Stave(10, 110, 230); sB.addClef("bass").addTimeSignature("4/4"); if(key) sB.addKeySignature(key); sB.setContext(ctx).draw();
+        const makeNote = (v, clef, stem) => {
+            const d = slots[v]; const note = new VF.StaveNote({ keys: [`${d.n}/${d.o}`], duration: "w", clef: clef, stem_direction: stem });
+            if(d.acc) note.addModifier(new VF.Accidental(d.acc));
+            if(v === myRole) note.setStyle({ fillStyle: "#38bdf8", strokeStyle: "#38bdf8" }); 
+            else if (roles && roles[v] === 'BOT') note.setStyle({ fillStyle: "#10B981", strokeStyle: "#10B981" }); 
+            else note.setStyle({ fillStyle: "#9ca3af", strokeStyle: "#9ca3af" }); 
+            return note;
+        };
+        const vS = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('s','treble',1)]);
+        const vA = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('a','treble',-1)]);
+        const vT = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('t','bass',1)]);
+        const vB = new VF.Voice({num_beats:4, beat_value:4}).addTickables([makeNote('b','bass',-1)]);
+        new VF.Formatter().joinVoices([vS, vA]).joinVoices([vT, vB]).format([vS,vA,vT,vB], 180);
+        vS.draw(ctx, sT); vA.draw(ctx, sT); vT.draw(ctx, sB); vB.draw(ctx, sB);
+    }
+
+    // --- CHAT LOGIC ---
+    function initRoomChat() {
+        if(!roomId) return;
+        const q = query(collection(db, "rooms", roomId, "chat"), orderBy("timestamp", "desc"), limit(20));
+        onSnapshot(q, (snapshot) => {
+            const msgs = []; snapshot.forEach(doc => msgs.push(doc.data()));
+            msgs.reverse(); updateChatLog(msgs);
+        });
+    }
+    
+    function updateChatLog(msgs) {
+        const container = document.getElementById('quick-chat-container');
+        container.innerHTML = "";
+        msgs.forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'q-msg';
+            div.innerHTML = `<b>${m.name}:</b> ${escapeHtml(m.text)}`;
+            container.appendChild(div);
+        });
+        container.scrollTop = container.scrollHeight;
+    }
+
+    window.sendMsg = async (inputId) => {
+        const input = document.getElementById(inputId); const text = input.value.trim();
+        if(!text || !currentUser || !roomId) return;
+        input.value = '';
+        try { await addDoc(collection(db, "rooms", roomId, "chat"), { uid: currentUser.uid, name: currentUser.displayName, text: text, timestamp: serverTimestamp() }); } catch(e){}
+    };
+    
+    window.handleChatEnter = (inputId, e) => { if(e.key === 'Enter') sendMsg(inputId); };
+    function escapeHtml(text) { return text.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+    
+    function startGlobalHeartbeat() { updateStatus(); setInterval(updateStatus, 60000); }
+    async function updateStatus() { if(currentUser) try{ await updateDoc(doc(db, "users", currentUser.uid), { lastSeen: Date.now() }); }catch(e){} }
+
+    window.openInviteModal = async () => {
+        playSfx('click'); document.getElementById('invite-modal').classList.remove('hidden');
+        const list = document.getElementById('invite-list'); list.innerHTML = 'กำลังโหลด...';
+        try {
+            const uDoc = await getDoc(doc(db, "users", currentUser.uid));
+            if(uDoc.exists() && uDoc.data().friends) {
+                list.innerHTML = ''; uDoc.data().friends.forEach(f => {
+                    const div = document.createElement('div'); div.className = 'f-item';
+                    div.innerHTML = `<img src="${f.avatar}" style="width:30px; height:30px; border-radius:50%;"><span>${f.name}</span><button class="f-btn">เชิญ</button>`;
+                    div.querySelector('button').onclick = (e) => { e.target.innerText="ส่งแล้ว"; e.target.disabled=true; e.target.style.background="#555"; sendInvite(f.uid); };
+                    list.appendChild(div);
+                });
+            } else { list.innerHTML = '<div style="text-align:center;">ไม่มีเพื่อน</div>'; }
+        } catch(e){ list.innerHTML = 'Error'; }
+    };
+    async function sendInvite(uid) { await addDoc(collection(db, `users/${uid}/notifications`), { type: 'invite', gameType: 'quest', fromUid: currentUser.uid, fromName: currentUser.displayName, roomId: roomId, timestamp: serverTimestamp() }); }
+</script>
+</body>
+</html>
