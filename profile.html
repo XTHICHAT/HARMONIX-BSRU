@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmonix - Profile & Login</title>
+
+    <link rel="icon" type="image/png" href="favicon.PNG">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           ✨ HARMONIX - MINIMAL FUTURISTIC THEME
+           ========================================= */
+        :root { 
+            --bg-dark: #05050A;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #00E5FF;
+            --secondary: #B066FE;
+            --accent: #FF007A;
+            --danger: #FF3366;
+            --gold: #FACC15;
+            --text-main: #FFFFFF; 
+            --text-dim: #8A8A93; 
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Montserrat', 'Sarabun', sans-serif; 
+            background-color: var(--bg-dark); 
+            min-height: 100dvh; 
+            overflow-x: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            color: var(--text-main); 
+        }
+
+        .ambient-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--bg-dark); }
+        .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.4; animation: float 12s infinite alternate ease-in-out; }
+        .orb.cyan { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--primary); }
+        .orb.purple { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: var(--secondary); animation-delay: -5s; }
+        .orb.pink { top: 40%; left: 30%; width: 30vw; height: 30vw; background: var(--accent); animation-duration: 15s; opacity: 0.2; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+
+        .app-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 100px 20px 120px 20px; width: 100%; animation: fadeUp 0.5s ease-out forwards; z-index: 10; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .glass-card { width: 100%; max-width: 420px; background: rgba(15, 15, 20, 0.6); backdrop-filter: blur(30px); border: 1px solid var(--glass-border); border-radius: 35px; padding: 50px 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); text-align: center; }
+        
+        .input-field { width: 100%; padding: 18px 20px; border-radius: 20px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.4); color: #fff; margin-bottom: 15px; outline: none; font-size: 1rem; font-weight: 700; font-family: 'Montserrat', 'Sarabun'; transition: 0.3s; text-align: center; }
+        .input-field:focus { border-color: var(--primary); box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.2); }
+        
+        .btn-solid { width: 100%; padding: 20px; border-radius: 20px; border: none; font-weight: 900; font-size: 1.1rem; cursor: pointer; transition: 0.2s; font-family: 'Montserrat'; display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px; letter-spacing: 1px; }
+        .btn-solid:active { transform: scale(0.96); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #FFF; box-shadow: 0 10px 25px rgba(176, 102, 254, 0.3); }
+        .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #FFF; }
+        .btn-danger { background: rgba(255, 51, 102, 0.1); color: var(--danger); border: 1px solid rgba(255, 51, 102, 0.3); }
+        .btn-outline { background: #FFF; color: #000; box-shadow: 0 10px 25px rgba(255,255,255,0.2); }
+        
+        .btn-link { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.9rem; font-weight: 700; font-family: 'Sarabun'; transition: 0.2s; padding: 5px; }
+        .btn-link:hover { color: var(--primary); }
+
+        .divider { color: var(--text-dim); margin: 25px 0; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 15px; font-weight: 800; font-family: 'Montserrat'; }
+        .divider::before, .divider::after { content: ''; height: 1px; width: 25%; background: var(--glass-border); }
+
+        .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px; }
+        .ava-option { width: 100%; aspect-ratio: 1/1; border-radius: 16px; border: 2px solid var(--glass-border); background: rgba(0,0,0,0.5); cursor: pointer; padding: 5px; transition: 0.3s; }
+        .ava-option.selected { border-color: var(--primary); box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); background: rgba(0, 229, 255, 0.1); transform: scale(1.05); }
+
+        /* Navigation */
+        .mobile-only { display: flex; } .desktop-only { display: none; }
+        .mobile-header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; background: rgba(5, 5, 10, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); }
+        .logo-text { font-size: 1.2rem; font-weight: 900; letter-spacing: 4px; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; color: transparent; }
+        .btn-icon-glass { width: 45px; height: 45px; border-radius: 14px; background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); color: var(--text-main); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; cursor: pointer; position: relative; overflow: hidden; transition: 0.3s; }
+        .btn-icon-glass:active { transform: scale(0.9); border-color: var(--primary); color: var(--primary); }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; display: none; }
+        
+        .mobile-bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 70px; background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(30px); border: 1px solid var(--glass-border); border-radius: 24px; display: flex; justify-content: space-around; align-items: center; z-index: 100; padding: 0 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-decoration: none; font-size: 0.65rem; font-weight: 700; gap: 4px; transition: 0.3s; width: 60px; height: 100%; cursor: pointer; }
+        .nav-item i { font-size: 1.5rem; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active i { transform: translateY(-4px); filter: drop-shadow(0 0 10px var(--primary)); }
+
+        @media (min-width: 1024px) {
+            .mobile-only { display: none !important; } .desktop-only { display: flex !important; }
+            .desktop-nav { position: fixed; top: 0; width: 100%; padding: 25px 50px; display: flex; justify-content: space-between; align-items: center; z-index: 100; background: rgba(5, 5, 10, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); }
+            .nav-links { display: flex; gap: 40px; background: var(--glass-bg); padding: 12px 35px; border-radius: 100px; border: 1px solid var(--glass-border); }
+            .nav-links a { color: var(--text-dim); text-decoration: none; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; transition: 0.3s; }
+            .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); }
+        }
+
+        /* 🔴 Notification Dot */
+        .notif-dot { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; box-shadow: 0 0 10px var(--danger); z-index: 10; display: none; }
+
+        /* 💬 Modal Report */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg">
+        <div class="orb cyan"></div>
+        <div class="orb purple"></div>
+        <div class="orb pink"></div>
+    </div>
+
+    <nav class="desktop-only desktop-nav">
+        <div class="logo-text">HARMONIX</div>
+        <div class="nav-links">
+            <a href="studio.html">Studio</a>
+            <a href="dashboard.html">Games</a>
+            <a href="index.html">Join</a>
+            <a href="harmony-pro.html">Create</a>
+            <a href="teacher.html">Class</a>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button class="btn-icon-glass" onclick="window.location.href='notifications.html'">
+                <i class="fa-regular fa-bell"></i>
+                <div class="notif-dot" id="nav-dot-desktop"></div>
+            </button>
+            <button class="btn-icon-glass" onclick="window.location.reload()" style="border-color: var(--primary); color: var(--primary); box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);">
+                <img src="" id="nav-avatar-desktop" class="avatar-img">
+                <i class="fa-regular fa-user" id="nav-icon-desktop"></i>
+            </button>
+        </div>
+    </nav>
+
+    <header class="mobile-only mobile-header">
+        <button class="btn-icon-glass" onclick="window.location.href='notifications.html'">
+            <i class="fa-regular fa-bell"></i>
+            <div class="notif-dot" id="nav-dot-mobile"></div>
+        </button>
+        <div class="logo-text">PROFILE</div>
+        <button class="btn-icon-glass" onclick="window.location.reload()" style="border-color: var(--primary); color: var(--primary); box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);">
+            <img src="" id="nav-avatar-mobile" class="avatar-img">
+            <i class="fa-regular fa-user" id="nav-icon-mobile"></i>
+        </button>
+    </header>
+
+    <main class="app-content">
+        
+        <div id="loading-section" class="glass-card">
+            <h2 style="color:var(--primary); margin:0; font-family:'Montserrat'; letter-spacing:2px;"><i class="fa-solid fa-spinner fa-spin"></i> LOADING...</h2>
+        </div>
+
+        <div id="auth-section" class="glass-card" style="display: none;">
+            <h2 id="auth-title" style="color:white; font-weight:900; margin-top:0; font-family:'Montserrat'; letter-spacing:2px; margin-bottom: 25px;">LOGIN</h2>
+            
+            <button class="btn-solid btn-outline" onclick="loginWithGoogle()">
+                <i class="fa-brands fa-google" style="color: #EA4335;"></i> Continue with Google
+            </button>
+            
+            <div class="divider">OR</div>
+
+            <input type="text" id="reg-name" class="input-field" placeholder="Display Name (ชื่อในเกม)" style="display:none;">
+            <input type="email" id="email" class="input-field" placeholder="Email (อีเมล)">
+            <input type="password" id="password" class="input-field" placeholder="Password (รหัสผ่าน)">
+            
+            <button class="btn-solid btn-primary" onclick="handleAuth()">CONTINUE</button>
+            
+            <div style="display:flex; justify-content:space-between; margin-top:15px; padding:0 5px;">
+                <button class="btn-link" id="btn-forgot" onclick="forgotPassword()">ลืมรหัสผ่าน?</button>
+                <button class="btn-link" id="btn-toggle" style="color:var(--primary);" onclick="toggleAuthMode()">สร้างบัญชีใหม่</button>
+            </div>
+
+            <div class="divider">GUEST MODE</div>
+            
+            <button class="btn-solid btn-secondary" onclick="document.getElementById('guest-setup').style.display='block'; this.style.display='none';">
+                <i class="fa-solid fa-user-astronaut"></i> เล่นแบบผู้เยี่ยมชม
+            </button>
+            
+            <div id="guest-setup" style="display: none; margin-top:15px;">
+                <input type="text" id="guest-nickname" class="input-field" placeholder="ตั้งชื่อเล่น..." maxlength="15">
+                <button class="btn-solid btn-primary" onclick="joinAsGuest()">เริ่มเล่นทันที</button>
+            </div>
+        </div>
+
+        <div id="settings-section" class="glass-card" style="display: none;">
+            <h2 style="color:white; font-weight:900; margin-top:0; font-family:'Montserrat'; letter-spacing:2px;">SETTINGS</h2>
+            
+            <div style="text-align:left; margin-top:30px; margin-bottom:10px; color:var(--primary); font-size:0.85rem; font-weight:800; font-family:'Montserrat'; letter-spacing: 1px;">CHOOSE AVATAR</div>
+            <div class="avatar-grid" id="avatar-list"></div>
+            
+            <div style="text-align:left; margin-top:25px; margin-bottom:10px; color:var(--primary); font-size:0.85rem; font-weight:800; font-family:'Montserrat'; letter-spacing: 1px;">PROFILE INFO</div>
+            <input type="text" id="edit-name" class="input-field" placeholder="Display Name" style="text-align:left;">
+            <input type="text" id="display-email" class="input-field" disabled style="opacity:0.5; cursor:not-allowed; text-align:left; background: rgba(255,255,255,0.05);" placeholder="Email">
+            
+            <div id="security-section">
+                <div style="text-align:left; margin-top:25px; margin-bottom:10px; color:var(--primary); font-size:0.85rem; font-weight:800; font-family:'Montserrat'; letter-spacing: 1px;">SECURITY</div>
+                <button class="btn-solid btn-secondary" style="font-size:0.9rem;" onclick="sendResetPasswordEmail()">
+                    <i class="fa-solid fa-key"></i> ขอลิงก์เปลี่ยนรหัสผ่าน
+                </button>
+            </div>
+
+            <button class="btn-solid btn-secondary" style="margin-top:25px; font-size:0.95rem;" onclick="openReportModal()">
+                <i class="fa-solid fa-headset" style="color:var(--gold);"></i> ติดต่อผู้พัฒนา / แจ้งปัญหา
+            </button>
+
+            <hr style="border:none; border-top:1px solid var(--glass-border); margin: 30px 0 25px 0;">
+            
+            <button class="btn-solid btn-primary" onclick="saveProfile()"><i class="fa-solid fa-floppy-disk"></i> SAVE CHANGES</button>
+            <button class="btn-solid btn-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> LOGOUT</button>
+        </div>
+
+    </main>
+
+    <div id="report-modal" class="modal-overlay">
+        <div class="glass-card" style="padding: 40px 30px; width: 90%; max-width: 400px; text-align: left;">
+            <h3 style="color:var(--gold); margin-top:0; font-family:'Montserrat'; font-weight:900; letter-spacing:1px; display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-envelope-open-text"></i> CONTACT
+            </h3>
+            <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:20px; font-family:'Sarabun';">พบปัญหาการใช้งาน บั๊ก หรือมีข้อเสนอแนะ พิมพ์ส่งหาผู้พัฒนาได้เลยครับ!</p>
+            
+            <textarea id="report-text" class="input-field" rows="5" placeholder="พิมพ์ข้อความที่นี่..." style="text-align:left; resize:none; padding:15px;"></textarea>
+            
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn-solid btn-primary" style="margin-bottom:0; font-size:1rem;" onclick="submitReport()">ส่งข้อความ <i class="fa-solid fa-paper-plane"></i></button>
+                <button class="btn-solid" style="margin-bottom:0; background:transparent; color:var(--text-dim); border:1px solid var(--text-dim); font-size:1rem;" onclick="closeReportModal()">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="mobile-only mobile-bottom-nav">
+        <a href="studio.html" class="nav-item"><i class="fa-solid fa-sliders"></i></a>
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-gamepad"></i></a>
+        <a href="index.html" class="nav-item">
+            <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); width: 45px; height: 45px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.4); transition: 0.3s;">
+                <i class="fa-solid fa-bolt" style="font-size: 1.2rem;"></i>
+            </div>
+        </a>
+        <a href="harmony-pro.html" class="nav-item"><i class="fa-solid fa-plus"></i></a>
+        <a href="teacher.html" class="nav-item"><i class="fa-solid fa-users"></i></a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        // นำเข้าฟังก์ชันอีเมลและรหัสผ่านทั้งหมดกลับมา
+        import { getAuth, onAuthStateChanged, signOut, updateProfile, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, getDoc, collection, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff" };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        
+        window.selectedSeedUrl = "";
+        let currentUserData = null;
+
+        const loadTimeout = setTimeout(() => {
+            document.getElementById('loading-section').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'block';
+        }, 2000);
+
+        onAuthStateChanged(auth, async (user) => { 
+            clearTimeout(loadTimeout);
+            document.getElementById('loading-section').style.display = 'none';
+
+            const authSec = document.getElementById('auth-section');
+            const setSec = document.getElementById('settings-section');
+            const navAvaM = document.getElementById('nav-avatar-mobile'); const navIconM = document.getElementById('nav-icon-mobile');
+            const navAvaD = document.getElementById('nav-avatar-desktop'); const navIconD = document.getElementById('nav-icon-desktop');
+
+            if(user) { 
+                authSec.style.display = 'none';
+                setSec.style.display = 'block';
+                
+                document.getElementById('edit-name').value = user.displayName || ""; 
+                document.getElementById('display-email').value = user.isAnonymous ? "Guest Account (ไม่มีอีเมล)" : (user.email || "No Email Linked");
+                
+                // ซ่อนปุ่มเปลี่ยนรหัสผ่านถ้าเป็นบัญชี Guest
+                if(user.isAnonymous) { document.getElementById('security-section').style.display = 'none'; } 
+                else { document.getElementById('security-section').style.display = 'block'; }
+                
+                // ตรวจสอบอีเมล VIP และแอบยัดยศ Dev ให้เงียบๆ
+                if(user.email === "xthichatul@gmail.com") {
+                    await updateDoc(doc(db, "users", user.uid), { role: "dev" });
+                }
+
+                const photo = user.photoURL || `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${user.displayName}&backgroundColor=transparent`;
+                if(navIconM) navIconM.style.display = 'none'; if(navAvaM) { navAvaM.src = photo; navAvaM.style.display = 'block'; }
+                if(navIconD) navIconD.style.display = 'none'; if(navAvaD) { navAvaD.src = photo; navAvaD.style.display = 'block'; }
+                
+                renderAvatarGrid(user.photoURL);
+                listenToNotificationBadge(user.uid);
+
+            } else { 
+                authSec.style.display = 'block';
+                setSec.style.display = 'none';
+            }
+        });
+
+        // 🟢 ระบบล็อกอินด้วย Google 
+        const googleProvider = new GoogleAuthProvider(); 
+        window.loginWithGoogle = async () => { 
+            try { 
+                const res = await signInWithPopup(auth, googleProvider); 
+                const userRef = doc(db, "users", res.user.uid);
+                const userDoc = await getDoc(userRef);
+                
+                let isDev = (res.user.email === "xthichatul@gmail.com");
+
+                if (!userDoc.exists()) {
+                    await setDoc(userRef, { 
+                        displayName: res.user.displayName, 
+                        email: res.user.email, 
+                        photoURL: res.user.photoURL, 
+                        role: isDev ? "dev" : "student", 
+                        rankPoints: 0 
+                    }); 
+                } else if (isDev && userDoc.data().role !== "dev") {
+                    await updateDoc(userRef, { role: "dev" });
+                }
+
+                if(isDev) window.location.href = 'dev.html';
+                else window.location.href = 'dashboard.html'; 
+                
+            } catch (err) { alert("เกิดข้อผิดพลาดในการล็อกอิน: " + err.message); } 
+        };
+
+        // 🟢 ระบบสมัคร / ล็อกอินด้วยอีเมล
+        window.toggleAuthMode = () => { 
+            const reg = document.getElementById('reg-name'); const title = document.getElementById('auth-title'); 
+            const btn = document.getElementById('btn-toggle'); const forgot = document.getElementById('btn-forgot');
+            if(reg.style.display === 'none'){ 
+                reg.style.display = 'block'; title.innerText = "REGISTER"; btn.innerText = "มีบัญชีแล้ว? ล็อกอิน"; forgot.style.display = 'none';
+            } else { 
+                reg.style.display = 'none'; title.innerText = "LOGIN"; btn.innerText = "สร้างบัญชีใหม่"; forgot.style.display = 'block';
+            } 
+        };
+
+        window.handleAuth = async () => { 
+            const e = document.getElementById('email').value.trim(); const p = document.getElementById('password').value.trim(); const n = document.getElementById('reg-name').value.trim(); 
+            if(!e || !p) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+            try { 
+                if(document.getElementById('reg-name').style.display === 'block') { 
+                    if(!n) return alert("กรุณาตั้งชื่อในเกม");
+                    const res = await createUserWithEmailAndPassword(auth, e, p); 
+                    const photo = `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${n}&backgroundColor=transparent`; 
+                    await updateProfile(res.user, { displayName: n, photoURL: photo }); 
+                    
+                    let isDev = (e === "xthichatul@gmail.com");
+                    await setDoc(doc(db, "users", res.user.uid), { displayName: n, email: e, photoURL: photo, role: isDev ? "dev" : "student", rankPoints: 0 }); 
+                    
+                    if(isDev) window.location.href = 'dev.html';
+                    else window.location.href = 'dashboard.html'; 
+                } else { 
+                    const res = await signInWithEmailAndPassword(auth, e, p); 
+                    if(e === "xthichatul@gmail.com") window.location.href = 'dev.html';
+                    else window.location.href = 'dashboard.html'; 
+                }
+            } catch(err) { alert("เกิดข้อผิดพลาด: " + err.message); } 
+        };
+
+        // 🟢 ระบบเล่นแบบ Guest
+        window.joinAsGuest = async () => {
+            const name = document.getElementById('guest-nickname').value.trim(); if(!name) return alert("กรุณาใส่ชื่อ");
+            try { 
+                const res = await signInAnonymously(auth); 
+                const photo = `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${name}&backgroundColor=transparent`; 
+                await updateProfile(res.user, { displayName: name, photoURL: photo }); 
+                await setDoc(doc(db, "users", res.user.uid), { displayName: name, email: "Guest", photoURL: photo, role: "guest", rankPoints: 0 }); 
+                window.location.href = 'dashboard.html';
+            } catch(e) { alert("เกิดข้อผิดพลาด: " + e.message); }
+        };
+
+        // 🟢 ระบบลืมรหัส / เปลี่ยนรหัส
+        window.forgotPassword = async () => {
+            const email = prompt("กรุณากรอกอีเมลของคุณ เพื่อรับลิงก์รีเซ็ตรหัสผ่าน:");
+            if(!email) return;
+            try { await sendPasswordResetEmail(auth, email); alert("ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลแล้ว! กรุณาตรวจสอบกล่องจดหมายของคุณ"); } catch(e) { alert("เกิดข้อผิดพลาด: " + e.message); }
+        };
+
+        window.sendResetPasswordEmail = async () => {
+            const email = auth.currentUser.email;
+            if(!email) return alert("บัญชีนี้ไม่มีอีเมลที่เชื่อมโยง");
+            try { await sendPasswordResetEmail(auth, email); alert("ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมล: " + email + " เรียบร้อยแล้ว!"); } catch(e) { alert("เกิดข้อผิดพลาด: " + e.message); }
+        };
+
+        // 🔔 ระบบตรวจสอบจุดแดง (Unread Messages)
+        function listenToNotificationBadge(uid) {
+            onSnapshot(collection(db, "notifications"), (snap) => {
+                let readMsgs = JSON.parse(localStorage.getItem(`read_notifs_${uid}`) || "[]");
+                let delMsgs = JSON.parse(localStorage.getItem(`deleted_notifs_${uid}`) || "[]");
+                let hasUnread = false;
+
+                snap.forEach(doc => {
+                    const notifId = doc.id;
+                    const n = doc.data();
+                    
+                    if (n.target !== 'all' && n.target !== uid) return;
+                    if(!delMsgs.includes(notifId) && !readMsgs.includes(notifId)) {
+                        hasUnread = true;
+                    }
+                });
+
+                const dotMobile = document.getElementById('nav-dot-mobile');
+                const dotDesktop = document.getElementById('nav-dot-desktop');
+                if(hasUnread) {
+                    if(dotMobile) dotMobile.style.display = 'block';
+                    if(dotDesktop) dotDesktop.style.display = 'block';
+                } else {
+                    if(dotMobile) dotMobile.style.display = 'none';
+                    if(dotDesktop) dotDesktop.style.display = 'none';
+                }
+            });
+        }
+
+        // 💬 ระบบแจ้งปัญหา (ส่งเข้า Reports)
+        window.openReportModal = () => {
+            document.getElementById('report-text').value = '';
+            document.getElementById('report-modal').style.display = 'flex';
+        };
+        window.closeReportModal = () => {
+            document.getElementById('report-modal').style.display = 'none';
+        };
+        window.submitReport = async () => {
+            const msg = document.getElementById('report-text').value.trim();
+            if(!msg) return alert("กรุณาพิมพ์รายละเอียดปัญหาก่อนกดส่งครับ");
+
+            try {
+                await addDoc(collection(db, "reports"), {
+                    senderId: auth.currentUser.uid,
+                    senderName: auth.currentUser.displayName || "Unknown User",
+                    message: msg,
+                    createdAt: serverTimestamp()
+                });
+                alert("ส่งข้อความถึงผู้พัฒนาเรียบร้อยแล้ว ขอบคุณครับ!");
+                closeReportModal();
+            } catch(e) {
+                alert("เกิดข้อผิดพลาดในการส่ง: " + e.message);
+            }
+        };
+
+        // 🖼️ อัปเดตรูปโปรไฟล์ให้น่ารักขึ้น (Cute Avatars)
+        function renderAvatarGrid(currentPhoto) { 
+            const grid = document.getElementById('avatar-list'); 
+            grid.innerHTML = ''; 
+            
+            // ใช้ Set รูปที่น่ารักๆ เช่น fun-emoji, micah, lorelei, adventurer
+            const seeds = [
+                { name: 'Mimi', set: 'fun-emoji' }, { name: 'Bibi', set: 'fun-emoji' },
+                { name: 'Lily', set: 'micah' }, { name: 'Milo', set: 'micah' },
+                { name: 'Bella', set: 'lorelei' }, { name: 'Nala', set: 'lorelei' },
+                { name: 'Zoe', set: 'adventurer' }, { name: 'Cody', set: 'adventurer' }
+            ];
+            
+            seeds.forEach(s => { 
+                const url = `https://api.dicebear.com/7.x/${s.set}/svg?seed=${s.name}&backgroundColor=transparent`; 
+                const img = document.createElement('img'); img.src = url; img.className = 'ava-option'; 
+                if(currentPhoto === url) { img.classList.add('selected'); window.selectedSeedUrl = url; }
+                img.onclick = () => { document.querySelectorAll('.ava-option').forEach(e=>e.classList.remove('selected')); img.classList.add('selected'); window.selectedSeedUrl = url; }; 
+                grid.appendChild(img); 
+            }); 
+        }
+
+        window.saveProfile = async () => { 
+            const u = auth.currentUser; const n = document.getElementById('edit-name').value.trim(); const p = window.selectedSeedUrl || u.photoURL; 
+            if(!n) return alert("โปรดใส่ชื่อของคุณ"); 
+            try { 
+                await updateProfile(u, { displayName: n, photoURL: p }); 
+                await updateDoc(doc(db, "users", u.uid), { displayName: n, photoURL: p }); 
+                alert("บันทึกการตั้งค่าเรียบร้อย!"); window.location.href = 'dashboard.html'; 
+            } catch(err) { alert("เกิดข้อผิดพลาดในการบันทึก"); } 
+        };
+
+        window.logout = () => { if(confirm("ออกจากระบบใช่หรือไม่?")) signOut(auth).then(() => window.location.reload()); };
+    </script>
+</body>
+</html>

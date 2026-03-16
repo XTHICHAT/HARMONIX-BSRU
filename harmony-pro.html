@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmonix - Harmony Pro (Create)</title>
+
+    <link rel="icon" type="image/png" href="favicon.PNG">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           ✨ HARMONIX - MINIMAL FUTURISTIC THEME
+           ========================================= */
+        :root { 
+            --bg-dark: #05050A;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #00E5FF; /* Cyan */
+            --secondary: #B066FE; /* Purple */
+            --accent: #FF007A; /* Neon Pink */
+            --gold: #FACC15;
+            --danger: #FF3366;
+            --success: #10B981;
+            --text-main: #FFFFFF; 
+            --text-dim: #8A8A93; 
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Montserrat', 'Sarabun', sans-serif; 
+            background-color: var(--bg-dark); 
+            min-height: 100dvh; 
+            overflow-x: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            color: var(--text-main); 
+        }
+
+        /* 🌌 Ambient Glow Background */
+        .ambient-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--bg-dark); }
+        .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.4; animation: float 12s infinite alternate ease-in-out; }
+        .orb.cyan { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--primary); }
+        .orb.purple { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: var(--secondary); animation-delay: -5s; }
+        .orb.pink { top: 40%; left: 30%; width: 30vw; height: 30vw; background: var(--accent); animation-duration: 15s; opacity: 0.2; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+
+        /* 📱 MOBILE HEADER & DESKTOP NAV */
+        .mobile-only { display: flex; } .desktop-only { display: none; }
+        
+        .mobile-header { 
+            position: fixed; top: 0; width: 100%; padding: 15px 20px; 
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            background: rgba(5, 5, 10, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); 
+        }
+        .logo-text { font-size: 1.2rem; font-weight: 900; letter-spacing: 4px; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; color: transparent; }
+        .btn-icon-glass { width: 45px; height: 45px; border-radius: 14px; background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); color: var(--text-main); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden; }
+        .btn-icon-glass:active { transform: scale(0.9); border-color: var(--primary); color: var(--primary); }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; display: none; }
+
+        .mobile-bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 70px; background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(30px); border: 1px solid var(--glass-border); border-radius: 24px; display: flex; justify-content: space-around; align-items: center; z-index: 100; padding: 0 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-decoration: none; font-size: 0.65rem; font-weight: 700; gap: 4px; transition: 0.3s; width: 60px; height: 100%; cursor: pointer; }
+        .nav-item i { font-size: 1.4rem; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active i { transform: translateY(-4px); filter: drop-shadow(0 0 10px var(--primary)); }
+
+        @media (min-width: 1024px) {
+            .mobile-only { display: none !important; } .desktop-only { display: flex !important; }
+            .desktop-nav { position: fixed; top: 0; width: 100%; padding: 25px 50px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+            .nav-links { display: flex; gap: 40px; background: var(--glass-bg); padding: 12px 35px; border-radius: 100px; border: 1px solid var(--glass-border); }
+            .nav-links a { color: var(--text-dim); text-decoration: none; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; transition: 0.3s; letter-spacing: 1px; }
+            .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); }
+        }
+
+        /* 🎮 MAIN CONTENT */
+        .app-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 100px 20px 120px 20px; width: 100%; max-width: 1000px; margin: 0 auto; animation: fadeUp 0.5s ease-out forwards; z-index: 10; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 🎛️ GAME MODES GRID */
+        .section-title { width: 100%; text-align: center; color: white; font-family: 'Montserrat'; font-weight: 900; font-size: 1.4rem; margin-bottom: 30px; letter-spacing: 2px; }
+        .menu-container { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; max-width: 900px; }
+        @media (min-width: 768px) { .menu-container { grid-template-columns: repeat(3, 1fr); gap: 25px; } }
+        
+        .mode-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 30px; padding: 40px 20px; text-align: center; cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-decoration: none; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        .mode-card.disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(50%); }
+        
+        .mc-icon { width: 80px; height: 80px; border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 20px; background: rgba(0,0,0,0.4); transition: 0.3s; z-index: 2; }
+        .mc-title { font-size: 1.1rem; font-weight: 900; color: white; margin-bottom: 10px; z-index: 2; font-family: 'Montserrat'; letter-spacing: 1px; }
+        .mc-desc { font-size: 0.85rem; color: var(--text-dim); font-family: 'Sarabun'; z-index: 2; font-weight: 500; line-height: 1.5; }
+        
+        .teacher-badge { position: absolute; top: 20px; right: -35px; color: #000; font-size: 0.6rem; font-weight: 900; padding: 5px 40px; transform: rotate(45deg); z-index: 3; font-family: 'Montserrat'; letter-spacing: 1px; }
+        
+        /* Theming */
+        .c-multi .mc-icon { color: var(--primary); border: 1px solid rgba(0, 229, 255, 0.3); box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.1); }
+        .c-time .mc-icon { color: var(--gold); border: 1px solid rgba(250, 204, 21, 0.3); }
+        .c-survival .mc-icon { color: var(--danger); border: 1px solid rgba(255, 51, 102, 0.3); }
+
+        .badge-live { background: var(--primary); box-shadow: 0 5px 15px rgba(0, 229, 255, 0.4); }
+        .badge-pro { background: var(--secondary); color: white; box-shadow: 0 5px 15px rgba(176, 102, 254, 0.4); }
+
+        .mode-card::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: 0.4s; z-index: 1; border-radius: inherit; }
+        .c-multi:hover, .c-multi:active { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 20px 40px rgba(0, 229, 255, 0.15); }
+        .c-multi:hover::before { background: radial-gradient(circle at top, rgba(0, 229, 255, 0.1) 0%, transparent 70%); opacity: 1; }
+        .mode-card.disabled:active { transform: none; }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg">
+        <div class="orb cyan"></div>
+        <div class="orb purple"></div>
+        <div class="orb pink"></div>
+    </div>
+
+    <nav class="desktop-only desktop-nav">
+        <div class="logo-text">HARMONIX</div>
+        <div class="nav-links">
+            <a href="studio.html">Studio</a>
+            <a href="dashboard.html">Games</a>
+            <a href="index.html">Join</a>
+            <a href="harmony-pro.html" class="active">Create</a>
+            <a href="teacher.html">Class</a>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button class="btn-icon-glass" onclick="window.location.href='notifications.html'"><i class="fa-regular fa-bell"></i></button>
+            <button class="btn-icon-glass" onclick="window.location.href='profile.html'">
+                <img src="" id="nav-avatar-desktop" class="avatar-img">
+                <i class="fa-regular fa-user" id="nav-icon-desktop"></i>
+            </button>
+        </div>
+    </nav>
+
+    <header class="mobile-only mobile-header">
+        <div class="logo-text">PRO CREATOR</div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-icon-glass" onclick="window.location.href='notifications.html'"><i class="fa-regular fa-bell"></i></button>
+            <button class="btn-icon-glass" onclick="window.location.href='profile.html'">
+                <img src="" id="nav-avatar-mobile" class="avatar-img">
+                <i class="fa-regular fa-user" id="nav-icon-mobile"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="app-content">
+        
+        <div class="section-title">CHOOSE GAME MODE TO HOST</div>
+        
+        <div class="menu-container">
+            <div class="mode-card c-multi" onclick="window.location.href='multi.html?mode=host'">
+                <div class="teacher-badge badge-live">LIVE</div>
+                <div class="mc-icon"><i class="fa-solid fa-users-rays"></i></div>
+                <div class="mc-title">MULTIPLAYER LIVE</div>
+                <div class="mc-desc">สร้างห้องแข่งขันแบบเรียลไทม์กับนักเรียน</div>
+            </div>
+
+            <div class="mode-card c-time disabled" onclick="alert('โหมดแข่งขันทำเวลา สงวนสิทธิ์เฉพาะบัญชี Teacher Pro ในอนาคต')">
+                <div class="teacher-badge badge-pro">PRO ONLY</div>
+                <div class="mc-icon"><i class="fa-solid fa-stopwatch"></i></div>
+                <div class="mc-title">TIME ATTACK EXAM</div>
+                <div class="mc-desc">ข้อสอบจำกัดเวลา<br>ตอบไวได้คะแนนโบนัสเยอะ</div>
+            </div>
+
+            <div class="mode-card c-survival disabled" onclick="alert('โหมดเอาชีวิตรอด สงวนสิทธิ์เฉพาะบัญชี Teacher Pro ในอนาคต')">
+                <div class="teacher-badge badge-pro">PRO ONLY</div>
+                <div class="mc-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+                <div class="mc-title">SURVIVAL CHALLENGE</div>
+                <div class="mc-desc">สร้างด่านสุดโหด<br>ตอบผิดเกมจบทันที ห้ามพลาด</div>
+            </div>
+        </div>
+
+    </main>
+
+    <nav class="mobile-only mobile-bottom-nav">
+        <a href="studio.html" class="nav-item"><i class="fa-solid fa-sliders"></i></a>
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-gamepad"></i></a>
+        <a href="index.html" class="nav-item">
+            <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); width: 45px; height: 45px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.4); transition: 0.3s;">
+                <i class="fa-solid fa-bolt" style="font-size: 1.2rem;"></i>
+            </div>
+        </a>
+        <div class="nav-item active"><i class="fa-solid fa-plus"></i></div>
+        <a href="teacher.html" class="nav-item"><i class="fa-solid fa-users"></i></a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff" };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); 
+
+        onAuthStateChanged(auth, async (user) => { 
+            const navAvaM = document.getElementById('nav-avatar-mobile'); const navIconM = document.getElementById('nav-icon-mobile');
+            const navAvaD = document.getElementById('nav-avatar-desktop'); const navIconD = document.getElementById('nav-icon-desktop');
+
+            if(user) { 
+                const photo = user.photoURL || `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${user.displayName}&backgroundColor=0b0b0f`;
+                if(navIconM) navIconM.style.display = 'none'; if(navAvaM) { navAvaM.src = photo; navAvaM.style.display = 'block'; }
+                if(navIconD) navIconD.style.display = 'none'; if(navAvaD) { navAvaD.src = photo; navAvaD.style.display = 'block'; }
+            } else { 
+                window.location.href = 'profile.html'; 
+            }
+        });
+    </script>
+</body>
+</html>

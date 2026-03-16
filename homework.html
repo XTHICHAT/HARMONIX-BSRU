@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Harmonix - Homework</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+
+    <link rel="icon" type="image/png" href="favicon.PNG">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { 
+            --bg-dark: #05050A; --glass-bg: rgba(255, 255, 255, 0.03); --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #00E5FF; --secondary: #B066FE; --accent: #FF007A; --gold: #FACC15;
+            --danger: #FF3366; --success: #10B981; --text-main: #FFFFFF; --text-dim: #8A8A93; 
+            --paper-bg: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        body { font-family: 'Montserrat', 'Sarabun', sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; overscroll-behavior-y: none; }
+
+        .ambient-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--bg-dark); }
+        .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.3; animation: float 12s infinite alternate ease-in-out; }
+        .orb.cyan { top: -20%; left: -10%; width: 60vw; height: 60vw; background: var(--primary); }
+        .orb.purple { bottom: -10%; right: -20%; width: 70vw; height: 70vw; background: var(--secondary); animation-delay: -5s; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+
+        .app-container { flex: 1; display: flex; flex-direction: column; width: 100%; height: 100%; z-index: 10; position: relative; }
+
+        /* --- TOP BAR --- */
+        #top-toolbar { flex-shrink: 0; height: 65px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between; background: rgba(5, 5, 10, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); z-index: 50; }
+        .toolbar-group { display: flex; gap: 10px; align-items: center; }
+        .btn-top { background: var(--glass-bg); color: var(--text-dim); border: 1px solid var(--glass-border); border-radius: 12px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .btn-top:active { transform: scale(0.9); }
+        .game-title-disp { font-family: 'Montserrat'; font-weight: 900; color: white; font-size: 1.1rem; letter-spacing: 1px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        #timer-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.1); position: relative; flex-shrink: 0; display: none; }
+        #timer-fill { height: 100%; width: 100%; background: var(--primary); box-shadow: 0 0 15px var(--primary); transition: width 1s linear; }
+
+        /* --- WORKSPACE (PAPER) --- */
+        #workspace { flex: 1; overflow: auto; position: relative; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+        #paper-wrapper { padding: 40px; margin: 0 auto; display: flex; justify-content: center; min-width: fit-content; min-height: fit-content; transition: 0.1s; transform-origin: top left;}
+        #paper { width: 800px; min-height: 1131px; background: var(--paper-bg); box-shadow: 0 20px 60px rgba(0,0,0,0.8); border-radius: 4px; padding: 40px 50px; display: flex; flex-direction: column; transform-origin: top left; }
+        
+        #vexflow-out { flex: 1; width: 100%; position: relative; display: flex; flex-direction: column; }
+        .system-row { position: relative; width: 100%; margin-bottom: 30px; }
+        .hitbox { position: absolute; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .hitbox.active { background: rgba(250, 204, 21, 0.15); border: 2px dashed var(--gold); z-index: 10; }
+
+        /* --- KEYBOARD PANEL --- */
+        #keyboard { background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(30px); border-top: 1px solid var(--glass-border); padding: 15px; display: flex; flex-direction: column; gap: 10px; z-index: 50; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); padding-bottom: max(15px, env(safe-area-inset-bottom)); flex-shrink: 0; }
+        .kb-header { display: flex; justify-content: space-between; align-items: center; max-width: 800px; width: 100%; margin: 0 auto; margin-bottom: 5px; }
+        .submit-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #FFF; padding: 12px 30px; border-radius: 14px; font-weight: 900; font-size: 1rem; border: none; cursor: pointer; font-family: 'Montserrat'; letter-spacing: 1px; box-shadow: 0 10px 20px rgba(176, 102, 254, 0.3); transition: 0.2s; }
+        .submit-btn:active { transform: scale(0.95); box-shadow: none; }
+
+        .kb-grid { display: flex; flex-direction: column; gap: 10px; max-width: 800px; margin: 0 auto; width: 100%; }
+        .top-tools { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 5px; overflow-x: auto; padding-bottom: 5px;}
+        .top-tools::-webkit-scrollbar { display: none; }
+        
+        .voice-selector { display: flex; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 4px; gap: 4px; }
+        .btn-v { background: transparent; border: none; border-radius: 8px; color: var(--text-dim); font-weight: 900; cursor: pointer; padding: 8px 15px; font-family: 'Montserrat'; font-size: 0.9rem; transition: 0.2s; }
+        .btn-v.selected { background: var(--primary); color: #000; box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); }
+        .btn-v:disabled { opacity: 0.3; cursor: not-allowed; }
+        
+        .note-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .btn-n { background: var(--glass-bg); color: #FFF; border: 1px solid var(--glass-border); border-radius: 14px; font-size: 1.3rem; font-weight: 900; cursor: pointer; height: 55px; font-family: 'Montserrat'; transition: 0.2s;}
+        .btn-n:active { transform: scale(0.92); background: rgba(255,255,255,0.1); }
+        .btn-n.active { background: var(--gold); color: #000; border-color: var(--gold); box-shadow: 0 0 15px rgba(250, 204, 21, 0.4); transform: scale(1.05); }
+        
+        .tool-row { display: flex; gap: 6px; width: 100%; overflow-x: auto; }
+        .tool-row::-webkit-scrollbar { display: none; }
+        .btn-tool { flex: 1; min-width: 50px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-weight: 800; cursor: pointer; height: 45px; font-family: 'Montserrat'; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+        /* --- MODALS --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); display: flex; justify-content: center; align-items: center; z-index: 1000; visibility: hidden; opacity: 0; transition: 0.3s ease; }
+        .modal.show { visibility: visible; opacity: 1; }
+        .modal-content { background: rgba(15, 15, 20, 0.9); padding: 40px; border-radius: 35px; text-align: center; border: 1px solid var(--glass-border); width: 90%; max-width: 420px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); transform: scale(0.9); transition: 0.3s; }
+        .modal.show .modal-content { transform: scale(1); }
+        
+        .btn-result { width: 100%; padding: 20px; border-radius: 20px; font-weight: 900; cursor: pointer; font-size: 1rem; border:none; margin: 8px 0; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Montserrat'; letter-spacing: 1px; }
+        .btn-res-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #FFF; box-shadow: 0 10px 20px rgba(176, 102, 254, 0.3); }
+        .btn-res-primary:active { transform: scale(0.96); box-shadow: none; }
+
+        #loading-screen { position: fixed; inset: 0; background: var(--bg-dark); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
+        <h2 style="color: white; font-family: 'Montserrat'; letter-spacing: 2px;">LOADING HOMEWORK</h2>
+        <p style="color: var(--text-dim); font-family: 'Sarabun';">กำลังโหลดการบ้านจากเซิร์ฟเวอร์...</p>
+    </div>
+
+    <div class="ambient-bg"><div class="orb cyan"></div><div class="orb purple"></div></div>
+
+    <div class="app-container">
+        
+        <div id="top-toolbar">
+            <div class="toolbar-group">
+                <a href="teacher.html" class="btn-top" id="btn-back"><i class="fa-solid fa-arrow-left"></i></a>
+                <div class="game-title-disp" id="game-title">HOMEWORK</div>
+            </div>
+            <div class="toolbar-group">
+                <div style="font-family:'Sarabun'; color:var(--text-dim); font-size:0.8rem; text-align:right;">
+                    สถานะ: <span style="color:var(--primary); font-weight:bold;">กำลังทำ</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="timer-bar"><div id="timer-fill"></div></div>
+
+        <div id="workspace">
+            <div id="paper-wrapper">
+                <div id="paper">
+                    <div style="text-align:center; color:black; font-family:'Noto Serif', serif; font-size:2rem; font-weight:900; margin-bottom:20px;" id="sheet-title-disp">HOMEWORK</div>
+                    <div id="vexflow-out"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="keyboard">
+            <div class="kb-header">
+                <div style="font-size:0.8rem; color:var(--text-dim); font-family:'Sarabun';">เติมคำตอบในช่อง<span style="color:var(--primary); font-weight:bold;">สีฟ้า</span>ให้ครบถ้วน</div>
+                <button class="submit-btn" onclick="submitHomework()">ส่งการบ้าน <i class="fa-regular fa-paper-plane"></i></button>
+            </div>
+
+            <div class="kb-grid">
+                <div class="top-tools">
+                    <div class="voice-selector">
+                        <button class="btn-v selected" id="v-s" onclick="setVoice('s')">SOP</button>
+                        <button class="btn-v" id="v-a" onclick="setVoice('a')">ALT</button>
+                        <button class="btn-v" id="v-t" onclick="setVoice('t')">TEN</button>
+                        <button class="btn-v" id="v-b" onclick="setVoice('b')">BAS</button>
+                    </div>
+                </div>
+
+                <div class="note-row">
+                    <button class="btn-n" onclick="playToneNote('c'); setNote('c')" id="n-c">C</button>
+                    <button class="btn-n" onclick="playToneNote('d'); setNote('d')" id="n-d">D</button>
+                    <button class="btn-n" onclick="playToneNote('e'); setNote('e')" id="n-e">E</button>
+                    <button class="btn-n" onclick="playToneNote('f'); setNote('f')" id="n-f">F</button>
+                    <button class="btn-n" onclick="playToneNote('g'); setNote('g')" id="n-g">G</button>
+                    <button class="btn-n" onclick="playToneNote('a'); setNote('a')" id="n-a">A</button>
+                    <button class="btn-n" onclick="playToneNote('b'); setNote('b')" id="n-b">B</button>
+                </div>
+                
+                <div class="tool-row">
+                    <button class="btn-tool" style="color:var(--gold); font-family:'Times New Roman'; font-size:1.6rem;" onclick="playSfx('click'); setAcc('#')">♯</button>
+                    <button class="btn-tool" style="font-family:'Times New Roman'; font-size:1.6rem;" onclick="playSfx('click'); setAcc('n')">♮</button>
+                    <button class="btn-tool" style="color:var(--secondary); font-family:'Times New Roman'; font-size:1.6rem;" onclick="playSfx('click'); setAcc('b')">♭</button>
+                    <button class="btn-tool" onclick="playSfx('click'); shiftOctave(1)">Oct+</button>
+                    <button class="btn-tool" onclick="playSfx('click'); shiftOctave(-1)">Oct-</button>
+                    <button class="btn-tool" style="background:rgba(255,51,102,0.1); color:var(--danger); border-color:rgba(255,51,102,0.3);" onclick="playSfx('click'); undo()"><i class="fa-solid fa-rotate-left"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <div id="res-icon" style="font-size:4.5rem; margin-bottom:15px; filter: drop-shadow(0 0 20px rgba(0,229,255,0.5));">📩</div>
+            <h2 style="margin:0; color:white; font-family:'Montserrat'; font-weight:900; letter-spacing: 1px;">SUBMITTED!</h2>
+            <h3 id="res-player-name" style="color:var(--text-dim); margin: 5px 0 15px 0; font-family:'Montserrat'; font-weight:700;"></h3>
+            
+            <div style="font-size:4rem; font-weight:900; color:var(--primary); margin:15px 0; font-family:'Montserrat'; text-shadow: 0 0 20px rgba(0,229,255,0.4);" id="final-score">0%</div>
+            <div style="color:var(--text-dim); margin-bottom:20px; font-family:'Sarabun';">ระบบตรวจคำตอบและส่งเข้าสมุดของอาจารย์เรียบร้อยแล้ว</div>
+            
+            <button id="btn-save-score" class="btn-result btn-res-primary" onclick="playSfx('click'); saveScoreAndExit()"><i class="fa-solid fa-house"></i> กลับหน้าห้องเรียน</button>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, increment, collection, setDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    
+    const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff" };
+    const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+    
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const SFX = { click: new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"), win: new Audio("https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3") };
+    Object.values(SFX).forEach(s => { s.volume = 0.5; s.load(); });
+    window.playSfx = (type) => { try { if(SFX[type]){ SFX[type].currentTime=0; SFX[type].play().catch(()=>{}); } } catch(e){} };
+
+    const NOTE_FREQS = { 'c': 261.63, 'c#': 277.18, 'db': 277.18, 'd': 293.66, 'd#': 311.13, 'eb': 311.13, 'e': 329.63, 'f': 349.23, 'f#': 369.99, 'gb': 369.99, 'g': 392.00, 'g#': 415.30, 'ab': 415.30, 'a': 440.00, 'a#': 466.16, 'bb': 466.16, 'b': 493.88 };
+    window.playToneNote = (noteName) => { try { if(audioCtx.state === 'suspended') audioCtx.resume(); const n = studentData[curM].beats[curB][curV]; let freq = NOTE_FREQS[noteName.toLowerCase()] || 440; const octDiff = n.o - 4; freq = freq * Math.pow(2, octDiff); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5); osc.stop(audioCtx.currentTime + 0.5); } catch(e) {} };
+
+    const VF = Vex.Flow;
+    
+    let currentUser = null;
+    let originalExamData = null; // ข้อมูลที่ครูสร้าง
+    let studentData = []; // ข้อมูลที่เด็กเอามาแก้
+    let examId = null;
+    let examTitle = "";
+    
+    let curM = 0, curB = 0, curV = 's';
+    let totalQuestions = 0;
+    let currentScore = 0;
+    let historyStack = [];
+
+    // Timer
+    let timerInterval;
+    let timeLeft = 0; let maxTime = 0;
+
+    // --- ZOOM & DRAG ---
+    let currentZoom = window.innerWidth < 800 ? 0.45 : 0.8; 
+    const paperEl = document.getElementById('paper');
+    const paperWrapper = document.getElementById('paper-wrapper');
+    const workspace = document.getElementById('workspace');
+
+    function applyZoom() { 
+        paperEl.style.transform = `scale(${currentZoom})`; 
+        paperWrapper.style.width = `${800 * currentZoom + 80}px`; 
+        paperWrapper.style.height = `${paperEl.offsetHeight * currentZoom + 80}px`; 
+    }
+
+    let initialPinchDist = null, initialZoom = 1;
+    workspace.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { initialPinchDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); initialZoom = currentZoom; } }, { passive: false });
+    workspace.addEventListener('touchmove', (e) => { if (e.touches.length === 2 && initialPinchDist) { e.preventDefault(); const currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); const scale = currentDist / initialPinchDist; currentZoom = Math.min(2.5, Math.max(0.2, initialZoom * scale)); applyZoom(); } }, { passive: false });
+    workspace.addEventListener('touchend', (e) => { if (e.touches.length < 2) initialPinchDist = null; });
+    
+    let isDragging = false; let startX, startY, scrollLeft, scrollTop;
+    workspace.addEventListener('mousedown', (e) => { if (e.target.closest('.hitbox') || e.target.tagName === 'BUTTON') return; isDragging = true; workspace.style.cursor = 'grabbing'; startX = e.pageX - workspace.offsetLeft; startY = e.pageY - workspace.offsetTop; scrollLeft = workspace.scrollLeft; scrollTop = workspace.scrollTop; });
+    workspace.addEventListener('mousemove', (e) => { if (!isDragging) return; e.preventDefault(); const x = e.pageX - workspace.offsetLeft; const y = e.pageY - workspace.offsetTop; workspace.scrollLeft = scrollLeft - (x - startX) * 1.5; workspace.scrollTop = scrollTop - (y - startY) * 1.5; });
+    window.addEventListener('mouseup', () => { isDragging = false; workspace.style.cursor = 'auto'; });
+    workspace.addEventListener('wheel', (e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); const zoomSpeed = 0.05; if (e.deltaY < 0) currentZoom = Math.min(2.5, currentZoom + zoomSpeed); else currentZoom = Math.max(0.2, currentZoom - zoomSpeed); applyZoom(); } }, { passive: false });
+
+    // --- INIT ---
+    onAuthStateChanged(auth, async (user) => { 
+        if(user) { 
+            currentUser = user; 
+            const urlParams = new URLSearchParams(window.location.search);
+            examId = urlParams.get('exam');
+
+            if (!examId) { alert("หน้านี้สำหรับทำการบ้านเท่านั้น!"); window.location.href = 'teacher.html'; return; }
+
+            try {
+                const examDoc = await getDoc(doc(db, "exams", examId));
+                if (examDoc.exists()) {
+                    const resultDoc = await getDoc(doc(db, "exams", examId, "results", user.uid));
+                    if(resultDoc.exists()) {
+                        alert("คุณทำการบ้านข้อนี้ส่งไปแล้วครับ!");
+                        window.location.href = 'teacher.html'; return;
+                    }
+                    setupExamMode(examDoc.data());
+                } else {
+                    alert("ไม่พบการบ้านข้อนี้"); window.location.href = 'teacher.html';
+                }
+            } catch(e) { alert("โหลดการบ้านล้มเหลว"); window.location.href = 'teacher.html'; }
+            document.getElementById('loading-screen').style.display = 'none';
+        } else { window.location.href = 'index.html'; }
+    });
+
+    function setupExamMode(data) {
+        originalExamData = data;
+        examTitle = data.name;
+        document.getElementById('game-title').innerText = examTitle.toUpperCase();
+        document.getElementById('sheet-title-disp').innerText = examTitle;
+        
+        // จำลองข้อมูลจาก Database มาให้เด็กแก้
+        studentData = JSON.parse(JSON.stringify(data.scoreData));
+        totalQuestions = 0;
+        let firstFound = false;
+
+        studentData.forEach((m, mIdx) => {
+            m.beats.forEach((b, bIdx) => {
+                ['s','a','t','b'].forEach(v => {
+                    if (b[v].hide) {
+                        b[v].isQuestion = true;
+                        b[v].n = 'c'; b[v].acc = ''; b[v].o = (v==='b'||v==='t') ? 3 : 4; // ล้างค่าให้เด็กเติม
+                        totalQuestions++;
+                        if(!firstFound) { curM = mIdx; curB = bIdx; curV = v; firstFound = true; }
+                    } else {
+                        b[v].isQuestion = false;
+                    }
+                });
+            });
+        });
+
+        if(data.timeLimit && data.timeLimit > 0) {
+            maxTime = data.timeLimit; timeLeft = maxTime;
+            document.getElementById('timer-bar').style.display = 'block';
+            startTimer();
+        } else {
+            document.getElementById('timer-bar').style.display = 'none';
+        }
+        
+        renderScore(); updateUI();
+    }
+
+    function startTimer() {
+        if(timerInterval) clearInterval(timerInterval);
+        document.getElementById('timer-fill').style.width = '100%';
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-fill').style.width = `${Math.min(100, (timeLeft/maxTime)*100)}%`;
+            if(timeLeft <= 0) submitHomework();
+        }, 1000);
+    }
+
+    // --- GAMEPLAY LOGIC ---
+    function saveState() { if(historyStack.length > 20) historyStack.shift(); historyStack.push(JSON.stringify(studentData)); }
+    window.undo = () => { if(historyStack.length){ playSfx('click'); studentData = JSON.parse(historyStack.pop()); renderScore(); updateUI(); } };
+
+    window.setVoice = (v) => { 
+        if(!studentData[curM].beats[curB][v].isQuestion) return; 
+        playSfx('click'); curV = v; updateUI(); renderScore(); 
+    };
+    window.setNote = (n) => { saveState(); studentData[curM].beats[curB][curV].n = n; studentData[curM].beats[curB][curV].acc = ''; renderScore(); updateUI(); };
+    window.setAcc = (acc) => { saveState(); playSfx('click'); let c = studentData[curM].beats[curB][curV].acc; studentData[curM].beats[curB][curV].acc = (c===acc)?'':acc; renderScore(); };
+    window.shiftOctave = (dir) => { saveState(); playSfx('click'); let v = studentData[curM].beats[curB][curV].o + dir; if(v>=2&&v<=6) studentData[curM].beats[curB][curV].o = v; renderScore(); };
+    
+    window.selectBeat = (m, b) => { 
+        curM = m; curB = b; 
+        // หาเสียงที่เป็นคำถาม (Question) ตัวแรกสุดใน Beat นี้ แล้วเลือกให้อัตโนมัติ
+        let found = false;
+        ['s','a','t','b'].forEach(v => { if(!found && studentData[curM].beats[curB][v].isQuestion) { curV = v; found = true; } });
+        playSfx('click'); renderScore(); updateUI(); 
+    };
+
+    function updateUI() {
+        ['s','a','t','b'].forEach(v => {
+            const btn = document.getElementById(`v-${v}`);
+            if (studentData[curM].beats[curB][v].isQuestion) {
+                btn.disabled = false; btn.classList.toggle('selected', v === curV);
+            } else {
+                btn.disabled = true; btn.classList.remove('selected');
+            }
+        });
+        document.querySelectorAll('.btn-n').forEach(b => b.classList.toggle('active', b.id === `n-${studentData[curM].beats[curB][curV].n}`));
+    }
+
+    // --- CHECK & SUBMIT ---
+    window.submitHomework = () => {
+        if(timerInterval) clearInterval(timerInterval);
+
+        let correct = 0;
+        originalExamData.scoreData.forEach((m, mIdx) => {
+            m.beats.forEach((b, bIdx) => {
+                ['s','a','t','b'].forEach(v => {
+                    if (b[v].hide) {
+                        const sNote = studentData[mIdx].beats[bIdx][v];
+                        const tNote = b[v];
+                        // การบ้านต้องเป๊ะทั้งโน้ตและ Octave! 
+                        if (sNote.n === tNote.n && (sNote.acc||'') === (tNote.acc||'') && sNote.o === tNote.o) correct++;
+                    }
+                });
+            });
+        });
+        
+        currentScore = totalQuestions > 0 ? Math.round((correct / totalQuestions) * 100) : 100;
+        
+        playSfx('win');
+        document.getElementById('result-modal').classList.add('show');
+        document.getElementById('final-score').innerText = currentScore + "%";
+        document.getElementById('res-player-name').innerText = currentUser.displayName;
+    };
+
+    window.saveScoreAndExit = async () => {
+        const btn = document.getElementById('btn-save-score');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; btn.style.pointerEvents = 'none'; 
+
+        try {
+            // บันทึกลงในผลสอบของห้องนั้น
+            await setDoc(doc(db, "exams", examId, "results", currentUser.uid), {
+                name: currentUser.displayName,
+                answers: studentData, // ส่งตัวโน้ตที่เด็กตอบกลับไปให้ครูดู
+                score: currentScore,
+                timestamp: serverTimestamp()
+            });
+            
+            // ให้ PTS นิสสสสสหน่อยเป็นรางวัล
+            if(currentScore > 0) { await updateDoc(doc(db, "users", currentUser.uid), { rankPoints: increment(10) }); }
+            
+            // บันทึกประวัติ
+            await addDoc(collection(db, "users", currentUser.uid, "history"), { type: 'EXAM', examCode: examTitle, score: currentScore+"%", createdAt: serverTimestamp() });
+            window.location.href = 'teacher.html';
+            
+        } catch(e) { alert("Error: " + e.message); btn.innerHTML = 'ลองอีกครั้ง'; btn.style.pointerEvents = 'auto'; }
+    };
+
+    // --- VEXFLOW RENDERER ---
+    function renderScore() {
+        const outDiv = document.getElementById("vexflow-out"); outDiv.innerHTML = ""; 
+        const paperW = 800; const marginX = 50; const SCALE = 0.72; const logicalUsableW = (paperW - (marginX*2)) / SCALE; 
+        const startX = 35; const rowHeight = 260; const staffGap = 90; 
+        
+        let layout = []; let curRow = [];
+        studentData.forEach((measure, mIdx) => {
+            let mWidth = measure.beats.length * 60; 
+            if (mIdx === 0) mWidth += 70; else if (studentData[mIdx-1].key !== measure.key) mWidth += 30;
+            curRow.push({ idx: mIdx, measure: measure, baseWidth: mWidth });
+            if (curRow.length === 4) { layout.push(curRow); curRow = []; }
+        });
+        if (curRow.length > 0) layout.push(curRow); 
+
+        layout.forEach((row) => {
+            let totalBaseW = row.reduce((sum, m) => sum + m.baseWidth, 0);
+            let stretchRatio = (row !== layout[layout.length-1] || row.length === 4) ? (logicalUsableW - startX - 20) / totalBaseW : 1.1;
+
+            const rowWrap = document.createElement('div'); rowWrap.className = 'system-row'; rowWrap.style.height = `${rowHeight * SCALE}px`;
+            const scaleWrap = document.createElement('div'); scaleWrap.style.transform = `scale(${SCALE})`; scaleWrap.style.transformOrigin = 'top left'; scaleWrap.style.width = `${logicalUsableW}px`; scaleWrap.style.height = `${rowHeight}px`; scaleWrap.style.position = 'absolute'; scaleWrap.style.left = `${marginX}px`;
+            rowWrap.appendChild(scaleWrap); outDiv.appendChild(rowWrap);
+
+            const renderer = new VF.Renderer(scaleWrap, VF.Renderer.Backends.SVG); renderer.resize(logicalUsableW, rowHeight); const ctx = renderer.getContext();
+            let xPos = startX; let yPos = 10; 
+
+            row.forEach(mData => {
+                const mIdx = mData.idx; const measure = mData.measure; const mWidth = mData.baseWidth * stretchRatio;
+                const sT = new VF.Stave(xPos, yPos, mWidth); const sB = new VF.Stave(xPos, yPos + staffGap, mWidth); 
+                
+                if (mIdx === 0) { sT.addClef("treble"); sB.addClef("bass"); sT.addTimeSignature(measure.time || "4/4"); sB.addTimeSignature(measure.time || "4/4"); }
+                if (mIdx===0 || studentData[mIdx-1].key !== measure.key) { sT.addKeySignature(measure.key); sB.addKeySignature(measure.key); }
+                if (mIdx === studentData.length - 1) { sT.setEndBarType(VF.Barline.type.END); sB.setEndBarType(VF.Barline.type.END); }
+                
+                sT.setContext(ctx).draw(); sB.setContext(ctx).draw();
+
+                if (row.indexOf(mData) === 0) {
+                    new VF.StaveConnector(sT, sB).setType(VF.StaveConnector.type.BRACE).setContext(ctx).draw();
+                    new VF.StaveConnector(sT, sB).setType(VF.StaveConnector.type.SINGLE_LEFT).setContext(ctx).draw();
+                }
+                
+                ctx.setFont("Sarabun", 18, "bold").setFillStyle("#64748B"); ctx.fillText(mIdx + 1, xPos, yPos - 5);
+
+                const createNotes = (part, clef, stem) => measure.beats.map((b, bIdx) => {
+                    const sn = new VF.StaveNote({ keys: [`${b[part].n}/${b[part].o}`], duration: "q", clef: clef, stem_direction: stem });
+                    if(b[part].acc) sn.addModifier(new VF.Accidental(b[part].acc));
+                    
+                    if (mIdx === curM && bIdx === curB && part === curV) {
+                        sn.setStyle({ fillStyle: "var(--gold)", strokeStyle: "var(--gold)" }); // กำลังจิ้ม
+                    } else if (b[part].isQuestion) {
+                        sn.setStyle({ fillStyle: "#00E5FF", strokeStyle: "#00E5FF" }); // ช่องต้องเติม
+                    } else {
+                        sn.setStyle({ fillStyle: "#000", strokeStyle: "#000" }); // โน้ตโจทย์
+                    }
+                    return sn;
+                });
+                
+                const numB = measure.beats.length;
+                const vS = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('s','treble',1));
+                const vA = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('a','treble',-1));
+                const vT = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('t','bass',1));
+                const vB = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('b','bass',-1));
+                
+                const noteStartX = sT.getNoteStartX();
+                const formatWidth = Math.max(50, mWidth - (noteStartX - xPos) - 15);
+
+                new VF.Formatter().joinVoices([vS, vA]).joinVoices([vT, vB]).format([vS, vA, vT, vB], formatWidth);
+                vS.draw(ctx, sT); vA.draw(ctx, sT); vT.draw(ctx, sB); vB.draw(ctx, sB);
+
+                measure.beats.forEach((b, bIdx) => {
+                    let hasQuestion = false; ['s','a','t','b'].forEach(v=>{ if(b[v].isQuestion) hasQuestion = true; });
+                    
+                    if (hasQuestion) {
+                        const noteX = vB.getTickables()[bIdx].getAbsoluteX();
+                        let nextNoteX = (bIdx < numB - 1) ? vB.getTickables()[bIdx+1].getAbsoluteX() : xPos + mWidth;
+                        let hitW = nextNoteX - noteX;
+                        const hb = document.createElement('div');
+                        hb.className = `hitbox ${mIdx===curM && bIdx===curB ? 'active' : ''}`;
+                        hb.style.left = `${noteX - 15}px`; hb.style.top = `${yPos}px`; hb.style.width = `${Math.max(30, hitW)}px`; hb.style.height = `${staffGap + 70}px`;
+                        hb.onclick = () => selectBeat(mIdx, bIdx);
+                        scaleWrap.appendChild(hb); 
+                    }
+
+                    const nx = vB.getTickables()[bIdx].getAbsoluteX();
+                    const textY = yPos + staffGap + 120; 
+                    if (b.roman) { ctx.setFont("Noto Serif", 16, "bold").setFillStyle("#111827"); ctx.fillText(b.roman, nx - 5, textY); }
+                    if (b.fig) { ctx.setFont("Sarabun", 14, "bold").setFillStyle("#475569"); let startY = textY; if(b.fig.includes(',')) startY -= 5; const rW = ctx.measureText(b.roman||'').width; b.fig.split(',').forEach((f, i) => { ctx.fillText(f, nx + rW + 2, startY + (i * 15)); }); }
+                });
+                xPos += mWidth;
+            });
+        });
+        document.getElementById('paper').style.height = Math.max(1131, 150 + (layout.length * (rowHeight * SCALE + 25)) + 50) + "px";
+        applyZoom();
+    }
+</script>
+</body>
+</html>

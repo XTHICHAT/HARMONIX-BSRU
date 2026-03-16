@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Teacher Dashboard - Harmonix</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+
+    <link rel="icon" type="image/png" href="favicon.PNG">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* =========================================
+           ✨ HARMONIX - MINIMAL FUTURISTIC THEME
+           ========================================= */
+        :root { 
+            --bg-dark: #05050A; --glass-bg: rgba(255, 255, 255, 0.03); --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #00E5FF; --secondary: #B066FE; --accent: #FF007A; --gold: #FACC15;
+            --danger: #FF3366; --success: #10B981; --text-main: #FFFFFF; --text-dim: #8A8A93; 
+            --paper-bg: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; margin: 0; padding: 0; }
+        body { font-family: 'Montserrat', 'Sarabun', sans-serif; background: var(--bg-dark); color: var(--text-main); min-height: 100dvh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+        .ambient-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: var(--bg-dark); }
+        .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.4; animation: float 12s infinite alternate ease-in-out; }
+        .orb.cyan { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--primary); }
+        .orb.purple { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: var(--secondary); animation-delay: -5s; }
+        @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 50px); } }
+
+        /* 📱 NAVIGATION */
+        .mobile-only { display: flex; } .desktop-only { display: none; }
+        .mobile-header { position: fixed; top: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; background: rgba(5, 5, 10, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); }
+        .logo-text { font-size: 1.2rem; font-weight: 900; letter-spacing: 4px; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; color: transparent; }
+        .btn-icon-glass { width: 45px; height: 45px; border-radius: 14px; background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); color: var(--text-main); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden; }
+        .btn-icon-glass:active { transform: scale(0.9); border-color: var(--primary); color: var(--primary); }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; display: none; }
+        .mobile-bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 70px; background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(30px); border: 1px solid var(--glass-border); border-radius: 24px; display: flex; justify-content: space-around; align-items: center; z-index: 100; padding: 0 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-decoration: none; font-size: 0.65rem; font-weight: 700; gap: 4px; transition: 0.3s; width: 60px; height: 100%; cursor: pointer; }
+        .nav-item i { font-size: 1.4rem; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active i { transform: translateY(-4px); filter: drop-shadow(0 0 10px var(--primary)); }
+
+        @media (min-width: 1024px) {
+            .mobile-only { display: none !important; } .desktop-only { display: flex !important; }
+            .desktop-nav { position: fixed; top: 0; width: 100%; padding: 25px 50px; display: flex; justify-content: space-between; align-items: center; z-index: 100; background: rgba(5, 5, 10, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); }
+            .nav-links { display: flex; gap: 40px; background: var(--glass-bg); padding: 12px 35px; border-radius: 100px; border: 1px solid var(--glass-border); }
+            .nav-links a { color: var(--text-dim); text-decoration: none; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; transition: 0.3s; letter-spacing: 1px; }
+            .nav-links a:hover, .nav-links a.active { color: var(--primary); text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); }
+        }
+
+        /* 🎮 MAIN CONTENT */
+        .app-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 100px 20px 120px 20px; width: 100%; max-width: 1000px; margin: 0 auto; animation: fadeUp 0.5s ease-out forwards; z-index: 10; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .section-title { width: 100%; text-align: center; color: white; font-weight: 900; font-size: 1.8rem; margin-bottom: 30px; letter-spacing: 2px; text-shadow: 0 0 15px rgba(0,229,255,0.4); display: flex; justify-content: center; align-items: center; gap: 12px; }
+
+        .role-view { width: 100%; display: none; }
+        .role-view.active { display: block; animation: fadeUp 0.3s; }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 25px; width: 100%; }
+        .tab-btn { flex: 1; padding: 15px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; color: var(--text-dim); font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 0.95rem; font-family: 'Montserrat'; letter-spacing: 1px; display: flex; justify-content: center; align-items: center; gap: 8px; backdrop-filter: blur(10px); }
+        .tab-btn.active { background: rgba(0, 229, 255, 0.1); border-color: var(--primary); color: var(--primary); box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.1); }
+        .tab-content { display: none; width: 100%; animation: fadeUp 0.3s; }
+        .tab-content.active { display: block; }
+
+        /* Items */
+        .list-item { background: rgba(15, 15, 20, 0.6); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); padding: 20px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .item-info h4 { margin: 0 0 8px 0; font-size: 1.2rem; color: white; font-family: 'Montserrat'; display: flex; align-items: center; gap: 8px; }
+        .item-code { font-family: 'Montserrat'; color: var(--primary); font-size: 0.85rem; font-weight: 800; background: rgba(0, 229, 255, 0.1); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(0, 229, 255, 0.3); display: inline-block; user-select: all; }
+        
+        .action-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .btn-icon { background: var(--glass-bg); color: white; border: 1px solid var(--glass-border); padding: 12px 18px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; font-family: 'Montserrat'; font-size: 0.85rem; }
+        .btn-icon.del { background: rgba(255, 51, 102, 0.1); color: var(--danger); border-color: rgba(255, 51, 102, 0.3); padding: 12px; }
+        
+        .btn-create { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #FFF; padding: 15px 25px; border-radius: 16px; text-decoration: none; font-weight: 900; display: inline-flex; align-items: center; gap: 8px; font-family: 'Montserrat'; letter-spacing: 1px; border: none; cursor: pointer; box-shadow: 0 10px 20px rgba(176, 102, 254, 0.3); transition: 0.2s; font-size: 1rem;}
+        .btn-create:active { transform: scale(0.95); box-shadow: none; }
+
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s; z-index: 2000; flex-direction: column; }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-box { background: rgba(15, 15, 20, 0.95); width: 95%; max-width: 800px; padding: 30px; border-radius: 30px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 30px 60px rgba(0,0,0,0.6); transform: scale(0.9); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-overlay.open .modal-box { transform: scale(1); }
+        .btn-close-modal { width: 38px; height: 38px; min-width: 38px; min-height: 38px; border-radius: 50%; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-dim); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .input-field { width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.5); color: #fff; margin-bottom: 15px; outline: none; font-size: 1rem; font-weight: 700; font-family: 'Sarabun'; transition: 0.3s; }
+        .scroll-area { flex: 1; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 16px; border: 1px solid var(--glass-border); padding: 10px; margin-top: 15px; }
+        
+        .styled-table { width: 100%; border-collapse: collapse; color: white; text-align: left; font-family: 'Sarabun'; }
+        .styled-table th { padding: 15px 10px; border-bottom: 1px solid var(--glass-border); color: var(--primary); font-weight: 800; font-family: 'Montserrat'; font-size: 0.9rem; letter-spacing: 1px; white-space: nowrap; }
+        .styled-table td { padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+
+        /* ==========================================
+           🎹 HW STUDIO FULLSCREEN (NEW DESIGN)
+           ========================================== */
+        #hw-studio-overlay { position: fixed; inset: 0; background: var(--bg-dark); z-index: 3000; display: flex; flex-direction: column; opacity: 0; visibility: hidden; transition: 0.3s; overflow: hidden; overscroll-behavior-y: none; }
+        #hw-studio-overlay.open { opacity: 1; visibility: visible; }
+        
+        #hw-top-toolbar { 
+            flex-shrink: 0; padding: 10px 15px; 
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;
+            background: rgba(15, 15, 20, 0.95); border-bottom: 1px solid var(--glass-border); z-index: 50; 
+        }
+        .hw-toolbar-row { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 250px; justify-content: space-between;}
+        
+        .hw-btn-top { background: transparent; color: var(--text-dim); border: none; border-radius: 12px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .hw-btn-top.active-tool { background: rgba(0, 229, 255, 0.1); color: var(--primary); }
+        .hw-top-select { appearance: none; background: transparent; color: var(--primary); height: 40px; padding: 0 5px; border: none; font-weight: 900; font-family: 'Montserrat'; text-align: center; outline: none; flex-shrink: 0; font-size: 1.1rem;}
+        
+        #hw-workspace { flex: 1; overflow: auto; position: relative; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+        #hw-paper-wrapper { padding: 40px; margin: 0 auto; display: flex; justify-content: center; min-width: fit-content; min-height: fit-content; transition: 0.1s; transform-origin: top left;}
+        #hw-paper { width: 800px; min-height: 1131px; background: var(--paper-bg); box-shadow: 0 20px 60px rgba(0,0,0,0.8); border-radius: 4px; padding: 40px 50px; display: flex; flex-direction: column; transform-origin: top left; }
+        
+        #hw-vexflow-out { flex: 1; width: 100%; position: relative; display: flex; flex-direction: column; }
+        .hw-system-row { position: relative; width: 100%; margin-bottom: 30px; }
+        .hw-hitbox { position: absolute; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .hw-hitbox.active { background: rgba(0, 229, 255, 0.1); border: 1px dashed rgba(0, 229, 255, 0.5); }
+
+        /* Keyboard Panel */
+        #hw-keyboard { background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(30px); border-top: 1px solid var(--glass-border); padding: 15px; display: flex; flex-direction: column; gap: 10px; z-index: 50; box-shadow: 0 -10px 40px rgba(0,0,0,0.8); padding-bottom: max(15px, env(safe-area-inset-bottom)); flex-shrink: 0; }
+        
+        #hw-meta-panel { display: none; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 5px; gap: 10px; flex-direction: column; animation: fadeUp 0.2s; }
+        #hw-meta-panel.open { display: flex; }
+        
+        .roman-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; width: 100%; }
+        .roman-scroll::-webkit-scrollbar { display: none; }
+        .hw-btn-roman { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: white; padding: 8px 15px; border-radius: 10px; font-family: 'Noto Serif', serif; font-weight: bold; cursor: pointer; flex-shrink: 0; transition: 0.2s; font-size: 1rem; }
+        .hw-btn-roman:active { transform: scale(0.9); background: var(--primary); color: #000; border-color: var(--primary); }
+
+        .hw-kb-grid { display: flex; flex-direction: column; gap: 10px; max-width: 800px; margin: 0 auto; width: 100%; }
+        .hw-top-tools { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 5px; overflow-x: auto; padding-bottom: 5px;}
+        .hw-top-tools::-webkit-scrollbar { display: none; }
+        
+        .hw-voice-selector { display: flex; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 4px; gap: 4px; }
+        .hw-btn-v { background: transparent; border: none; border-radius: 8px; color: var(--text-dim); font-weight: 900; cursor: pointer; padding: 8px 15px; font-family: 'Montserrat'; font-size: 0.9rem; transition: 0.2s; }
+        .hw-btn-v.selected { background: var(--primary); color: #000; box-shadow: 0 0 10px rgba(0,229,255,0.3); }
+        
+        .hw-note-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .hw-btn-n { background: var(--glass-bg); color: #FFF; border: 1px solid var(--glass-border); border-radius: 14px; font-size: 1.3rem; font-weight: 900; cursor: pointer; height: 55px; font-family: 'Montserrat'; }
+        .hw-btn-n.active { background: var(--gold); color: #000; border-color: var(--gold); box-shadow: 0 0 15px rgba(250,204,21,0.4); transform: scale(1.05); }
+        
+        .hw-tool-row { display: flex; gap: 6px; width: 100%; overflow-x: auto; }
+        .hw-tool-row::-webkit-scrollbar { display: none; }
+        .hw-btn-tool { flex: 1; min-width: 50px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-weight: 800; cursor: pointer; height: 45px; font-family: 'Montserrat'; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+        @media (max-width: 768px) {
+            .tabs { flex-direction: column; }
+            .list-item { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .action-btns { width: 100%; justify-content: space-between; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg"><div class="orb cyan"></div><div class="orb purple"></div></div>
+
+    <nav class="desktop-only desktop-nav">
+        <div class="logo-text">HARMONIX</div>
+        <div class="nav-links">
+            <a href="studio.html">Studio</a>
+            <a href="dashboard.html">Games</a>
+            <a href="index.html">Join</a>
+            <a href="harmony-pro.html">Create</a>
+            <a href="teacher.html" class="active">Class</a>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button class="btn-icon-glass" onclick="window.location.href='notifications.html'"><i class="fa-regular fa-bell"></i></button>
+            <button class="btn-icon-glass" onclick="window.location.href='profile.html'"><img src="" id="nav-avatar-desktop" class="avatar-img"><i class="fa-regular fa-user" id="nav-icon-desktop"></i></button>
+        </div>
+    </nav>
+
+    <header class="mobile-only mobile-header">
+        <div class="logo-text">TEACHER PRO</div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-icon-glass" onclick="window.location.href='notifications.html'"><i class="fa-regular fa-bell"></i></button>
+            <button class="btn-icon-glass" onclick="window.location.href='profile.html'"><img src="" id="nav-avatar-mobile" class="avatar-img"><i class="fa-regular fa-user" id="nav-icon-mobile"></i></button>
+        </div>
+    </header>
+
+    <main class="app-content">
+        <div id="loading-state" style="text-align:center; padding: 50px; color:var(--primary);"><i class="fa-solid fa-spinner fa-spin fa-3x"></i><h3 style="font-family:'Montserrat'; margin-top:15px; letter-spacing:2px;">AUTHENTICATING</h3></div>
+
+        <div id="teacher-view" class="role-view">
+            <h1 class="section-title"><i class="fa-solid fa-chalkboard-user"></i> TEACHER DASHBOARD</h1>
+            <div class="tabs"><button class="tab-btn active" onclick="switchTab('classes')" id="btn-tab-classes"><i class="fa-solid fa-graduation-cap"></i> ห้องเรียน (Classes)</button><button class="tab-btn" onclick="switchTab('exams')" id="btn-tab-exams"><i class="fa-solid fa-file-signature"></i> การบ้าน (Assignments)</button></div>
+            <div id="tab-classes" class="tab-content active">
+                <div style="display:flex; justify-content:flex-end; margin-bottom: 20px;"><button onclick="openModal('createClassModal')" class="btn-create" style="background: var(--primary); color: #000;"><i class="fa-solid fa-school"></i> สร้างห้องเรียนใหม่</button></div>
+                <div id="classes-list"><div style="text-align:center; color:var(--text-dim);"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div></div>
+            </div>
+            <div id="tab-exams" class="tab-content">
+                <div style="display:flex; justify-content:flex-end; margin-bottom: 20px;"><button onclick="openHwStudio()" class="btn-create"><i class="fa-solid fa-pen-ruler"></i> สร้างการบ้าน (HW STUDIO)</button></div>
+                <div id="exams-list"><div style="text-align:center; color:var(--text-dim);"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div></div>
+            </div>
+        </div>
+
+        <div id="student-view" class="role-view">
+            <h1 class="section-title" style="color:var(--gold); text-shadow: 0 0 15px rgba(250,204,21,0.4);"><i class="fa-solid fa-school"></i> MY CLASSROOM</h1>
+            <div id="student-no-class" style="display:none; text-align:center;"><div class="glass-card" style="padding: 40px; margin: 0 auto;"><i class="fa-solid fa-door-open" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px;"></i><h3 style="color:white; font-family:'Montserrat'; margin-bottom: 10px;">JOIN A CLASS</h3><p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:20px;">กรอกรหัส PIN 6 หลักจากอาจารย์เพื่อเข้าห้องเรียน</p><input type="text" id="join-pin-input" class="input-field" placeholder="000000" style="text-align:center; font-size:1.5rem; letter-spacing:5px; font-family:'Montserrat'; font-weight:900;"><button class="btn-create" style="width:100%; justify-content:center; padding:15px;" onclick="joinClass()">เข้าร่วมห้องเรียน</button></div></div>
+            <div id="student-has-class" style="display:none; width: 100%;">
+                <div class="glass-card" style="padding: 25px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.2);"><div><div style="color:var(--text-dim); font-size:0.8rem; font-weight:700; letter-spacing:1px; font-family:'Montserrat';">CURRENT CLASS</div><div id="stu-class-name" style="color:white; font-size:1.4rem; font-weight:900; font-family:'Montserrat'; margin-top:5px;">Class Name</div></div><button class="btn-icon" style="background:rgba(255,51,102,0.1); color:var(--danger); border-color:rgba(255,51,102,0.3);" onclick="leaveClass()"><i class="fa-solid fa-right-from-bracket"></i> ออก</button></div>
+                <h3 style="color:white; font-family:'Montserrat'; border-bottom:1px solid var(--glass-border); padding-bottom:10px; margin-bottom:20px;"><i class="fa-solid fa-file-signature" style="color:var(--primary);"></i> ASSIGNMENTS</h3>
+                <div id="stu-assignments-list"><div style="text-align:center; color:var(--text-dim);"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดการบ้าน...</div></div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="mobile-only mobile-bottom-nav">
+        <a href="studio.html" class="nav-item"><i class="fa-solid fa-sliders"></i></a>
+        <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-gamepad"></i></a>
+        <a href="index.html" class="nav-item"><div style="background: var(--glass-bg); border: 1px solid var(--glass-border); width: 45px; height: 45px; border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.4); transition: 0.3s;"><i class="fa-solid fa-bolt" style="font-size: 1.2rem;"></i></div></a>
+        <a href="harmony-pro.html" class="nav-item"><i class="fa-solid fa-plus"></i></a>
+        <div class="nav-item active"><i class="fa-solid fa-users"></i></div>
+    </nav>
+
+    <div class="modal-overlay" id="createClassModal"><div class="modal-box" style="max-width:420px;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;"><h3 style="color:white; margin:0; font-family:'Montserrat'; font-weight:900; letter-spacing:1px;"><i class="fa-solid fa-school" style="color:var(--primary);"></i> CREATE CLASS</h3><button class="btn-close-modal" onclick="closeModal('createClassModal')"><i class="fa-solid fa-xmark"></i></button></div><input type="text" id="class-name-input" class="input-field" placeholder="ชื่อห้องเรียน (เช่น ดนตรี ม.4/1)"><div id="class-pin-show" style="display:none; text-align:center; margin-bottom:20px;"><p style="color:var(--success); font-size:0.95rem; font-weight:bold; margin:0 0 10px 0;">สร้างสำเร็จ! รหัสห้องคือ:</p><div style="font-size:3.5rem; color:var(--gold); font-weight:900; letter-spacing:10px; font-family:'Montserrat'; background:rgba(0,0,0,0.5); padding:20px; border-radius:20px; border:1px solid rgba(250,204,21,0.3); text-shadow: 0 0 15px rgba(250,204,21,0.3);" id="disp-class-pin"></div></div><button id="btn-confirm-class" class="btn-create" onclick="createClass()" style="width:100%; justify-content:center; padding:18px;">บันทึกสร้างห้อง</button></div></div>
+    <div class="modal-overlay" id="studentsModal"><div class="modal-box" style="max-width: 800px;"><div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px;"><h3 style="margin:0; color:var(--primary); font-family:'Montserrat'; font-weight:900; letter-spacing:1px;" id="manage-class-title"><i class="fa-solid fa-users"></i> STUDENT LIST</h3><div style="display:flex; gap:10px;"><button class="btn-icon" style="background:rgba(16,185,129,0.1); color:var(--success); border-color:rgba(16,185,129,0.3);" onclick="exportScoresCSV()"><i class="fa-solid fa-file-csv"></i> โหลดคะแนน</button><button class="btn-close-modal" onclick="closeModal('studentsModal')"><i class="fa-solid fa-xmark"></i></button></div></div><div class="scroll-area" id="students-list-container"></div></div></div>
+    <div class="modal-overlay" id="historyModal" style="z-index: 2010;"><div class="modal-box" style="max-width: 500px;"><div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px;"><h3 style="margin:0; color:var(--gold); font-family:'Montserrat'; font-weight:900;"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการเล่น</h3><button class="btn-close-modal" onclick="closeModal('historyModal')"><i class="fa-solid fa-xmark"></i></button></div><div style="color:white; font-weight:bold; margin-top:15px; font-family:'Montserrat'; font-size:1.2rem;" id="hist-student-name">Name</div><div class="scroll-area" id="history-list-container" style="max-height: 400px;"></div></div></div>
+    <div class="modal-overlay" id="submissionsModal"><div class="modal-box" style="max-width: 800px;"><div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px;"><h3 style="margin:0; color:var(--success); font-family:'Montserrat'; font-weight:900;"><i class="fa-solid fa-inbox"></i> SUBMISSIONS</h3><button class="btn-close-modal" onclick="closeModal('submissionsModal')"><i class="fa-solid fa-xmark"></i></button></div><div style="display:flex; gap:10px; margin-top:15px;"><div style="flex:1; background:rgba(16,185,129,0.1); border:1px solid var(--success); padding:10px; border-radius:12px; text-align:center;"><div style="font-size:0.8rem; color:var(--text-dim);">ส่งแล้ว</div><div id="sub-done-count" style="font-size:1.5rem; font-weight:900; color:var(--success); font-family:'Montserrat';">0</div></div><div style="flex:1; background:rgba(255,51,102,0.1); border:1px solid var(--danger); padding:10px; border-radius:12px; text-align:center;"><div style="font-size:0.8rem; color:var(--text-dim);">ยังไม่ส่ง</div><div id="sub-wait-count" style="font-size:1.5rem; font-weight:900; color:var(--danger); font-family:'Montserrat';">0</div></div></div><div class="scroll-area" id="submissions-list-container"></div></div></div>
+    <div class="modal-overlay" id="graderModal" style="z-index: 2010;"><div class="modal-box" style="max-width: 900px; width: 95%;"><div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px;"><h3 style="margin:0; color:var(--gold); font-family:'Montserrat'; font-weight:900;"><i class="fa-solid fa-book-open"></i> ผลงาน: <span id="student-name-disp" style="color:white; font-family:'Sarabun'; font-weight:normal;"></span></h3><button class="btn-close-modal" onclick="closeModal('graderModal')"><i class="fa-solid fa-xmark"></i></button></div><div id="grader-wrapper" style="overflow:auto; margin-top:20px; background:white; padding:20px; border-radius:12px;"><h2 style="text-align:center; color:black; font-family:'Noto Serif', serif; margin-top:0;">STUDENT WORK</h2><div id="grader-vexflow-out"></div></div></div></div>
+
+    <div id="hw-studio-overlay">
+        
+        <div id="hw-top-toolbar">
+            <div class="hw-toolbar-row">
+                <button class="hw-btn-top" onclick="closeHwStudio()"><i class="fa-solid fa-chevron-left"></i></button>
+                <input type="text" id="hw-studio-title" placeholder="ชื่อการบ้าน..." style="background:transparent; border:none; color:white; font-family:'Montserrat'; font-weight:900; font-size:1.1rem; outline:none; flex:1; min-width: 100px;">
+            </div>
+            <div class="hw-toolbar-row" style="justify-content: space-between;">
+                <div style="display:flex; gap:10px;">
+                    <button class="hw-btn-top" onclick="hwAddMeasure()" title="เพิ่มห้อง"><i class="fa-solid fa-plus"></i></button>
+                    <select id="hw-key-select" class="hw-top-select" onchange="hwChangeKey(this.value)">
+                        <option value="C">C</option><option value="G">G</option><option value="D">D</option><option value="A">A</option><option value="E">E</option>
+                        <option value="F">F</option><option value="Bb">Bb</option><option value="Eb">Eb</option><option value="Ab">Ab</option>
+                        <option value="Am">Am</option><option value="Em">Em</option><option value="Bm">Bm</option><option value="Dm">Dm</option><option value="Gm">Gm</option><option value="Cm">Cm</option>
+                    </select>
+                    <button class="hw-btn-top" onclick="hwDeleteMeasure()" style="color:var(--danger);"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <button class="btn-create" style="padding: 8px 15px; font-size:0.8rem; height: 35px;" onclick="openPublishHwModal()">PUBLISH</button>
+            </div>
+        </div>
+
+        <div id="hw-workspace">
+            <div id="hw-paper-wrapper">
+                <div id="hw-paper">
+                    <div style="text-align:center; color:black; font-family:'Noto Serif', serif; font-size:2rem; font-weight:900; margin-bottom:20px;" id="hw-sheet-title-disp">NEW ASSIGNMENT</div>
+                    <div id="hw-vexflow-out"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="hw-keyboard">
+            
+            <div id="hw-meta-panel">
+                <div class="roman-scroll">
+                    <button class="hw-btn-roman" onclick="hwSetRoman('I')">I</button>
+                    <button class="hw-btn-roman" onclick="hwSetRoman('ii')">ii</button>
+                    <button class="hw-btn-roman" onclick="hwSetRoman('iii')">iii</button>
+                    <button class="hw-btn-roman" onclick="hwSetRoman('IV')">IV</button>
+                    <button class="hw-btn-roman" onclick="hwSetRoman('V')">V</button>
+                    <button class="hw-btn-roman" onclick="hwSetRoman('vi')">vi</button>
+                    <button class="hw-btn-roman" onclick="hwSetRoman('vii°')">vii°</button>
+                    <button class="hw-btn-roman" onclick="hwSetRoman('V7')">V7</button>
+                    <button class="hw-btn-roman" onclick="hwSetRoman('')" style="color:var(--danger);"><i class="fa-solid fa-eraser"></i></button>
+                </div>
+                <div style="display:flex; gap:10px; width:100%;">
+                    <input type="text" id="hw-input-fig" class="input-field" style="margin:0; padding:10px; font-size:0.9rem; flex:1;" placeholder="Figured (6,4)" oninput="hwUpdateBeatMeta()">
+                    <button class="btn-icon" style="background:var(--primary); color:#000; padding:10px;" onclick="hwAutoAnalyze()"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto</button>
+                </div>
+            </div>
+
+            <div class="hw-kb-grid">
+                <div class="hw-top-tools">
+                    <div class="hw-voice-selector">
+                        <button class="hw-btn-v selected" id="hw-v-s" onclick="hwSetVoice('s')">SOP</button>
+                        <button class="hw-btn-v" id="hw-v-a" onclick="hwSetVoice('a')">ALT</button>
+                        <button class="hw-btn-v" id="hw-v-t" onclick="hwSetVoice('t')">TEN</button>
+                        <button class="hw-btn-v" id="hw-v-b" onclick="hwSetVoice('b')">BAS</button>
+                    </div>
+                    
+                    <div style="display:flex; gap:5px;">
+                        <button class="hw-btn-top" onclick="document.getElementById('hw-meta-panel').classList.toggle('open')" title="วิเคราะห์คอร์ด" style="background:rgba(255,255,255,0.05); color:var(--text-dim);"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="hw-btn-top" id="hw-btn-hide" style="background:rgba(0,229,255,0.1); color:var(--primary); border-color:rgba(0,229,255,0.3);" onclick="hwToggleHide()" title="ซ่อน/แสดง โน้ตนี้"><i class="fa-solid fa-eye-slash"></i></button>
+                    </div>
+                </div>
+
+                <div class="hw-note-row">
+                    <button class="hw-btn-n" onclick="hwSetNote('c')" id="hw-n-c">C</button>
+                    <button class="hw-btn-n" onclick="hwSetNote('d')" id="hw-n-d">D</button>
+                    <button class="hw-btn-n" onclick="hwSetNote('e')" id="hw-n-e">E</button>
+                    <button class="hw-btn-n" onclick="hwSetNote('f')" id="hw-n-f">F</button>
+                    <button class="hw-btn-n" onclick="hwSetNote('g')" id="hw-n-g">G</button>
+                    <button class="hw-btn-n" onclick="hwSetNote('a')" id="hw-n-a">A</button>
+                    <button class="hw-btn-n" onclick="hwSetNote('b')" id="hw-n-b">B</button>
+                </div>
+                
+                <div class="hw-tool-row">
+                    <button class="hw-btn-tool" style="color:var(--gold); font-family:'Times New Roman'; font-size:1.6rem;" onclick="hwSetAcc('#')">♯</button>
+                    <button class="hw-btn-tool" style="font-family:'Times New Roman'; font-size:1.6rem;" onclick="hwSetAcc('n')">♮</button>
+                    <button class="hw-btn-tool" style="color:var(--secondary); font-family:'Times New Roman'; font-size:1.6rem;" onclick="hwSetAcc('b')">♭</button>
+                    <button class="hw-btn-tool" onclick="hwShiftOctave(1)">Oct+</button>
+                    <button class="hw-btn-tool" onclick="hwShiftOctave(-1)">Oct-</button>
+                    <button class="hw-btn-tool" style="background:rgba(255,51,102,0.1); color:var(--danger); border-color:rgba(255,51,102,0.3);" onclick="hwUndo()"><i class="fa-solid fa-rotate-left"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="publishHwModal" style="z-index: 3010;">
+        <div class="modal-box" style="max-width: 450px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--glass-border); padding-bottom:15px; margin-bottom: 20px;">
+                <h3 style="color:var(--primary); font-family:'Montserrat'; margin:0; font-weight:900;"><i class="fa-solid fa-paper-plane"></i> PUBLISH HW</h3>
+                <button class="btn-close-modal" onclick="closeModal('publishHwModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <label style="color:var(--text-dim); font-size:0.85rem; font-weight:700; margin-bottom:8px; display:block;">ส่งการบ้านให้ห้องเรียน:</label>
+            <select id="hw-pub-class" class="input-field" style="padding:12px;"></select>
+
+            <label style="color:var(--text-dim); font-size:0.85rem; font-weight:700; margin-bottom:8px; margin-top:10px; display:block;">เวลาในการทำ (Time Limit):</label>
+            <select id="hw-pub-time" class="input-field" style="padding:12px;">
+                <option value="0">ไม่จำกัดเวลา (Unlimited)</option>
+                <option value="300">5 นาที</option>
+                <option value="600">10 นาที</option>
+                <option value="900" selected>15 นาที</option>
+                <option value="1800">30 นาที</option>
+                <option value="3600">60 นาที</option>
+            </select>
+
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn-create" style="flex:1; justify-content:center; padding:15px;" onclick="confirmPublishHw()"><i class="fa-solid fa-check"></i> ยืนยันสั่งการบ้าน</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyAj0BepQS_4kLTWmCF8rSzqW44XkgefEG8", authDomain: "harmonix-5c90e.firebaseapp.com", projectId: "harmonix-5c90e", storageBucket: "harmonix-5c90e.firebasestorage.app", messagingSenderId: "659742972654", appId: "1:659742972654:web:f8d532a857da37519db1ff" };
+        const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
+        const VF = Vex.Flow;
+
+        const KEY_DATA = { 'C': {root:0, sharps:[]}, 'G': {root:7, sharps:['f']}, 'D': {root:2, sharps:['f','c']}, 'A': {root:9, sharps:['f','c','g']}, 'E': {root:4, sharps:['f','c','g','d']}, 'F': {root:5, flats:['b']}, 'Bb': {root:10, flats:['b','e']}, 'Eb': {root:3, flats:['b','e','a']}, 'Ab': {root:8, flats:['b','e','a','d']}, 'Am': {root:9, sharps:[]}, 'Em': {root:4, sharps:['f']}, 'Bm': {root:11, sharps:['f','c']}, 'Dm': {root:2, flats:['b']}, 'Gm': {root:7, flats:['b','e']}, 'Cm': {root:0, flats:['b','e','a']} };
+
+        let currentUserData = null; let activeClassId = null; let currentStudentsCache = []; 
+
+        window.openModal = (id) => document.getElementById(id).classList.add('open');
+        window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+        window.switchTab = (tab) => { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.getElementById(`btn-tab-${tab}`).classList.add('active'); document.getElementById(`tab-${tab}`).classList.add('active'); };
+
+        onAuthStateChanged(auth, async (user) => {
+            if(user) { 
+                const photo = user.photoURL || `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${user.displayName}`;
+                const navAvaM = document.getElementById('nav-avatar-mobile'); if(navAvaM) { navAvaM.src = photo; navAvaM.style.display = 'block'; }
+                const navAvaD = document.getElementById('nav-avatar-desktop'); if(navAvaD) { navAvaD.src = photo; navAvaD.style.display = 'block'; }
+
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if(userDoc.exists()) {
+                    currentUserData = userDoc.data();
+                    document.getElementById('loading-state').style.display = 'none';
+                    if(currentUserData.role === 'teacher' || currentUserData.role === 'dev') { document.getElementById('teacher-view').classList.add('active'); loadClasses(); loadExams(); } 
+                    else { document.getElementById('student-view').classList.add('active'); loadStudentDashboard(); }
+                }
+            } else { window.location.href = 'profile.html'; }
+        });
+
+        // ==========================================
+        // 👨‍🎓 STUDENT FUNCTIONS
+        // ==========================================
+        async function loadStudentDashboard() {
+            if(!currentUserData.classId) { document.getElementById('student-no-class').style.display = 'block'; document.getElementById('student-has-class').style.display = 'none'; } 
+            else {
+                document.getElementById('student-no-class').style.display = 'none'; document.getElementById('student-has-class').style.display = 'block';
+                try {
+                    const classDoc = await getDoc(doc(db, "classes", currentUserData.classId));
+                    if(classDoc.exists()) { document.getElementById('stu-class-name').innerText = classDoc.data().name; loadStudentAssignments(currentUserData.classId); } 
+                    else { await updateDoc(doc(db, "users", auth.currentUser.uid), { classId: "" }); loadStudentDashboard(); }
+                } catch(e) {}
+            }
+        }
+        window.joinClass = async () => { const pin = document.getElementById('join-pin-input').value.trim(); if(!pin) return alert("กรอกรหัส PIN"); try { const classDoc = await getDoc(doc(db, "classes", pin)); if(classDoc.exists()) { await updateDoc(doc(db, "users", auth.currentUser.uid), { classId: pin }); currentUserData.classId = pin; alert("เข้าร่วมห้องสำเร็จ!"); loadStudentDashboard(); } else { alert("ไม่พบห้อง"); } } catch(e) { alert("Error: " + e.message); } };
+        window.leaveClass = async () => { if(confirm("ออกห้องเรียน?")) { await updateDoc(doc(db, "users", auth.currentUser.uid), { classId: "" }); currentUserData.classId = ""; loadStudentDashboard(); } };
+        async function loadStudentAssignments(classId) {
+            const list = document.getElementById('stu-assignments-list');
+            try {
+                const q = query(collection(db, "exams"), where("classId", "==", classId)); const snap = await getDocs(q); list.innerHTML = "";
+                if(snap.empty) return list.innerHTML = "<div style='text-align:center; padding:20px; color:var(--text-dim);'>ไม่มีการบ้านใหม่ครับ 🎉</div>";
+                for (const docSnap of snap.docs) {
+                    const d = docSnap.data(); const examId = docSnap.id;
+                    const resultDoc = await getDoc(doc(db, "exams", examId, "results", auth.currentUser.uid));
+                    let btnHtml = resultDoc.exists() ? `<button class="btn-icon" style="background:transparent; color:var(--success); border:1px solid var(--success); cursor:default;"><i class="fa-solid fa-check"></i> ทำแล้ว</button>` : `<button class="btn-icon" style="background:var(--primary); color:#000;" onclick="window.location.href='homework.html?exam=${examId}'"><i class="fa-solid fa-pen"></i> ทำการบ้าน</button>`;
+                    list.innerHTML += `<div class="list-item"><div class="item-info"><h4 style="color:white; font-size:1.1rem; margin-bottom:5px;">${d.name}</h4><div style="font-size:0.8rem; color:var(--text-dim);">มอบหมายโดยอาจารย์</div></div><div class="action-btns">${btnHtml}</div></div>`;
+                }
+            } catch(e) {}
+        }
+
+        // ==========================================
+        // 👩‍🏫 TEACHER FUNCTIONS
+        // ==========================================
+        window.loadClasses = async () => {
+            const list = document.getElementById('classes-list'); const q = query(collection(db, "classes"), where("teacherId", "==", auth.currentUser.uid)); const snap = await getDocs(q); list.innerHTML = "";
+            if(snap.empty) return list.innerHTML = "<div style='text-align:center; color:var(--text-dim); padding: 30px;'>ยังไม่ได้สร้างห้องเรียนครับ</div>";
+            snap.forEach(docSnap => {
+                const data = docSnap.data();
+                list.innerHTML += `<div class="list-item"><div class="item-info"><h4><i class="fa-solid fa-chalkboard"></i> ${data.name}</h4><span class="item-code">PIN: ${docSnap.id}</span></div><div class="action-btns"><button class="btn-icon" onclick="viewStudents('${docSnap.id}', '${data.name}')" style="color:var(--primary);"><i class="fa-solid fa-users"></i> จัดการนักเรียน</button><button class="btn-icon del" onclick="deleteClass('${docSnap.id}', '${data.name}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
+            });
+        };
+        window.createClass = async () => { const name = document.getElementById('class-name-input').value.trim(); if(!name) return alert('กรุณาตั้งชื่อห้อง'); const btn = document.getElementById('btn-confirm-class'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.style.pointerEvents = 'none'; let pin = ""; while(true) { pin = Math.floor(100000 + Math.random() * 900000).toString(); const checkDoc = await getDoc(doc(db, "classes", pin)); if(!checkDoc.exists()) break; } try { await setDoc(doc(db, "classes", pin), { name: name, teacherId: auth.currentUser.uid, createdAt: serverTimestamp() }); document.getElementById('class-name-input').style.display = 'none'; document.getElementById('class-pin-show').style.display = 'block'; document.getElementById('disp-class-pin').innerText = pin; btn.innerText = 'ตกลง (รีโหลดหน้าจอ)'; btn.onclick = () => { closeModal('createClassModal'); loadClasses(); btn.onclick = createClass; }; btn.style.pointerEvents = 'auto'; } catch(e) { alert("Error"); btn.innerText = 'บันทึกสร้างห้อง'; btn.style.pointerEvents = 'auto'; } };
+        window.deleteClass = async (classId, name) => { if(confirm(`ยืนยันลบห้อง "${name}"? นักเรียนจะหลุดจากห้องนี้`)) { await deleteDoc(doc(db, "classes", classId)); loadClasses(); } };
+
+        window.viewStudents = async (classId, className) => {
+            activeClassId = classId; document.getElementById('manage-class-title').innerHTML = `<i class="fa-solid fa-users"></i> ${className}`; openModal('studentsModal');
+            const list = document.getElementById('students-list-container'); list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--primary);"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+            try {
+                const q = query(collection(db, "users"), where("classId", "==", classId)); const snap = await getDocs(q);
+                if(snap.empty) return list.innerHTML = '<div style="text-align:center; color:var(--text-dim); margin-top:20px;">ยังไม่มีนักเรียนในห้องนี้</div>';
+                currentStudentsCache = []; snap.forEach(d => { let stu = d.data(); stu.uid = d.id; currentStudentsCache.push(stu); }); currentStudentsCache.sort((a,b) => (b.rankPoints || 0) - (a.rankPoints || 0));
+                let html = '<table class="styled-table"><tr><th>PROFILE</th><th>ชื่อเล่น</th><th>คะแนน</th><th style="text-align:right;">ประวัติ</th></tr>';
+                currentStudentsCache.forEach((s, i) => { html += `<tr><td style="width:50px;"><img src="${s.photoURL}" style="width:35px; height:35px; border-radius:50%;"></td><td><strong style="color:white; font-family:'Montserrat';">${s.displayName}</strong></td><td style="color:var(--success); font-weight:900;">${s.rankPoints || 0}</td><td style="text-align:right;"><button class="btn-icon" style="display:inline-flex; padding:6px 12px; font-size:0.8rem;" onclick="viewStudentHistory('${s.uid}', '${s.displayName}')"><i class="fa-solid fa-clock-rotate-left"></i></button></td></tr>`; });
+                html += '</table>'; list.innerHTML = html;
+            } catch(e) { list.innerHTML = '<div style="text-align:center; color:var(--danger);">โหลดข้อมูลล้มเหลว</div>'; }
+        };
+
+        window.exportScoresCSV = () => {
+            if(currentStudentsCache.length === 0) return alert("ไม่มีข้อมูลนักเรียนให้ดาวน์โหลด");
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFFลำดับ,ชื่อบัญชี,คะแนนสะสม\n";
+            currentStudentsCache.forEach((s, i) => { csvContent += `${i+1},${s.displayName},${s.rankPoints || 0}\n`; });
+            const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `คะแนนห้อง_${activeClassId}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        };
+
+        window.viewStudentHistory = async (uid, name) => {
+            openModal('historyModal'); document.getElementById('hist-student-name').innerText = name;
+            const list = document.getElementById('history-list-container'); list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--gold);"><i class="fa-solid fa-spinner fa-spin"></i> โหลดประวัติ...</div>';
+            try {
+                const q = query(collection(db, "users", uid, "history")); const snap = await getDocs(q);
+                if(snap.empty) return list.innerHTML = '<div style="text-align:center; color:var(--text-dim); margin-top:20px;">ไม่มีประวัติ</div>';
+                let histArray = []; snap.forEach(d => { histArray.push(d.data()); }); histArray.sort((a,b) => b.createdAt - a.createdAt); list.innerHTML = "";
+                histArray.forEach(h => {
+                    const dateStr = h.createdAt ? new Date(h.createdAt.toDate()).toLocaleString('th-TH') : '-'; const typeColor = h.type === 'EXAM' ? 'var(--danger)' : 'var(--primary)';
+                    list.innerHTML += `<div style="background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-weight:900; color:${typeColor}; font-family:'Montserrat'; font-size:0.9rem;">${h.type}</div><div style="color:white; font-size:0.85rem; font-family:'Sarabun';">${h.examCode || 'ทั่วไป'}</div><div style="color:var(--text-dim); font-size:0.7rem; margin-top:4px;">${dateStr}</div></div><div style="font-size:1.4rem; font-weight:900; color:var(--gold);">${h.score}</div></div>`;
+                });
+            } catch(e) { list.innerHTML = '<div style="text-align:center; color:var(--danger);">โหลดล้มเหลว</div>'; }
+        };
+
+        // ==========================================
+        // 🎹 HW STUDIO LOGIC (สร้างการบ้านแบบล้ำๆ)
+        // ==========================================
+        function hwGetDefaultBeat() { return { s: { n:'c', o:5, acc:'', hide:false }, a: { n:'g', o:4, acc:'', hide:false }, t: { n:'e', o:4, acc:'', hide:false }, b: { n:'c', o:3, acc:'', hide:false }, roman: '', fig: '' }; }
+        
+        let hwScoreData = [{ key: 'C', time: '4/4', beats: Array(4).fill(null).map(() => hwGetDefaultBeat()) }];
+        let hwCurM = 0, hwCurB = 0, hwCurV = 's';
+        let hwHistoryStack = [];
+        
+        let hwCurrentZoom = window.innerWidth < 800 ? 0.45 : 0.8; 
+        const hwPaperEl = document.getElementById('hw-paper');
+        const hwPaperWrapper = document.getElementById('hw-paper-wrapper');
+        const hwWorkspace = document.getElementById('hw-workspace');
+
+        function applyHwZoom() { 
+            hwPaperEl.style.transform = `scale(${hwCurrentZoom})`; 
+            hwPaperWrapper.style.width = `${800 * hwCurrentZoom + 80}px`; 
+            hwPaperWrapper.style.height = `${hwPaperEl.offsetHeight * hwCurrentZoom + 80}px`; 
+        }
+
+        let hwInitialPinchDist = null, hwInitialZoom = 1;
+        hwWorkspace.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { hwInitialPinchDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); hwInitialZoom = hwCurrentZoom; } }, { passive: false });
+        hwWorkspace.addEventListener('touchmove', (e) => { if (e.touches.length === 2 && hwInitialPinchDist) { e.preventDefault(); const currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); const scale = currentDist / hwInitialPinchDist; hwCurrentZoom = Math.min(2.5, Math.max(0.2, hwInitialZoom * scale)); applyHwZoom(); } }, { passive: false });
+        hwWorkspace.addEventListener('touchend', (e) => { if (e.touches.length < 2) hwInitialPinchDist = null; });
+        
+        let isHwDragging = false; let hwStartX, hwStartY, hwScrollLeft, hwScrollTop;
+        hwWorkspace.addEventListener('mousedown', (e) => { if (e.target.closest('.hw-hitbox') || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return; isHwDragging = true; hwWorkspace.style.cursor = 'grabbing'; hwStartX = e.pageX - hwWorkspace.offsetLeft; hwStartY = e.pageY - hwWorkspace.offsetTop; hwScrollLeft = hwWorkspace.scrollLeft; hwScrollTop = hwWorkspace.scrollTop; });
+        hwWorkspace.addEventListener('mousemove', (e) => { if (!isHwDragging) return; e.preventDefault(); const x = e.pageX - hwWorkspace.offsetLeft; const y = e.pageY - hwWorkspace.offsetTop; hwWorkspace.scrollLeft = hwScrollLeft - (x - hwStartX) * 1.5; hwWorkspace.scrollTop = hwScrollTop - (y - hwStartY) * 1.5; });
+        window.addEventListener('mouseup', () => { isHwDragging = false; hwWorkspace.style.cursor = 'auto'; });
+        hwWorkspace.addEventListener('wheel', (e) => { if (e.ctrlKey || e.metaKey) { e.preventDefault(); const zoomSpeed = 0.05; if (e.deltaY < 0) hwCurrentZoom = Math.min(2.5, hwCurrentZoom + zoomSpeed); else hwCurrentZoom = Math.max(0.2, hwCurrentZoom - zoomSpeed); applyHwZoom(); } }, { passive: false });
+
+        window.openHwStudio = () => {
+            document.getElementById('hw-studio-title').value = '';
+            hwScoreData = [{ key: 'C', time: '4/4', beats: Array(4).fill(null).map(() => hwGetDefaultBeat()) }];
+            hwCurM = 0; hwCurB = 0; hwCurV = 's'; hwHistoryStack = [];
+            document.getElementById('hw-studio-overlay').classList.add('open');
+            applyHwZoom(); hwUpdateUI(); hwRenderScore();
+        };
+
+        window.closeHwStudio = () => { document.getElementById('hw-studio-overlay').classList.remove('open'); };
+        function hwSaveState() { if(hwHistoryStack.length > 20) hwHistoryStack.shift(); hwHistoryStack.push(JSON.stringify(hwScoreData)); }
+        
+        window.hwUndo = () => { if(hwHistoryStack.length){ hwScoreData = JSON.parse(hwHistoryStack.pop()); hwRenderScore(); hwUpdateUI(); } };
+        window.hwAddMeasure = () => { hwSaveState(); const prev = hwScoreData[hwScoreData.length - 1]; const numB = parseInt(prev.time.split('/')[0]); hwScoreData.push({ key: prev.key, time: prev.time, beats: Array(numB).fill(null).map(() => hwGetDefaultBeat()) }); hwCurM = hwScoreData.length - 1; hwCurB = 0; hwRenderScore(); hwUpdateUI(); };
+        window.hwDeleteMeasure = () => { if (hwScoreData.length <= 1) return; hwSaveState(); hwScoreData.splice(hwCurM, 1); if (hwCurM >= hwScoreData.length) hwCurM = hwScoreData.length - 1; hwCurB = 0; hwRenderScore(); hwUpdateUI(); };
+        window.hwChangeKey = (k) => { hwSaveState(); for (let i = hwCurM; i < hwScoreData.length; i++) { hwScoreData[i].key = k; } hwRenderScore(); };
+        window.hwSetVoice = (v) => { hwCurV = v; hwUpdateUI(); hwRenderScore(); };
+        window.hwSetNote = (n) => { hwSaveState(); hwScoreData[hwCurM].beats[hwCurB][hwCurV].n = n; hwScoreData[hwCurM].beats[hwCurB][hwCurV].acc = ''; hwRenderScore(); hwUpdateUI(); };
+        window.hwSetAcc = (acc) => { hwSaveState(); let c = hwScoreData[hwCurM].beats[hwCurB][hwCurV].acc; hwScoreData[hwCurM].beats[hwCurB][hwCurV].acc = (c===acc)?'':acc; hwRenderScore(); };
+        window.hwShiftOctave = (dir) => { hwSaveState(); let v = hwScoreData[hwCurM].beats[hwCurB][hwCurV].o + dir; if(v>=2&&v<=6) hwScoreData[hwCurM].beats[hwCurB][hwCurV].o = v; hwRenderScore(); };
+        window.hwSelectBeat = (m, b) => { hwCurM = m; hwCurB = b; hwRenderScore(); hwUpdateUI(); };
+        
+        // 👁️ สลับซ่อน/แสดงโน้ต
+        window.hwToggleHide = () => { 
+            hwSaveState(); 
+            let hideState = hwScoreData[hwCurM].beats[hwCurB][hwCurV].hide; 
+            hwScoreData[hwCurM].beats[hwCurB][hwCurV].hide = !hideState; 
+            hwRenderScore(); hwUpdateUI(); 
+        };
+
+        window.hwSetRoman = (val) => { hwSaveState(); hwScoreData[hwCurM].beats[hwCurB].roman = val; hwRenderScore(); };
+
+        function analyzeHarmonyForHW(beat, keyName) { 
+            const keyInfo = KEY_DATA[keyName] || KEY_DATA['C']; 
+            const map = {c:0, d:2, e:4, f:5, g:7, a:9, b:11}; 
+            const getPC = (n) => { let val = map[n.n]; if (n.acc === '#') val++; else if (n.acc === 'b') val--; else if (n.acc === 'n') { } else { if (keyInfo.sharps && keyInfo.sharps.includes(n.n)) val++; if (keyInfo.flats && keyInfo.flats.includes(n.n)) val--; } return (val + 12) % 12; };
+            const pcs = [getPC(beat.s), getPC(beat.a), getPC(beat.t), getPC(beat.b)]; 
+            const uniq = [...new Set(pcs)].sort((a,b)=>a-b); 
+            let detectedRoot = -1; let quality = "maj"; 
+            for (let r of uniq) { const intervals = uniq.map(u => (u - r + 12) % 12).sort((a,b)=>a-b); if (intervals.includes(0) && intervals.includes(4) && intervals.includes(7)) { detectedRoot = r; quality="maj"; break; } if (intervals.includes(0) && intervals.includes(3) && intervals.includes(7)) { detectedRoot = r; quality="min"; break; } if (intervals.includes(0) && intervals.includes(3) && intervals.includes(6)) { detectedRoot = r; quality="dim"; break; } } 
+            if (detectedRoot === -1) detectedRoot = pcs[3]; 
+            const degree = (detectedRoot - keyInfo.root + 12) % 12; const romans = { 0: "I", 2: "ii", 4: "iii", 5: "IV", 7: "V", 9: "vi", 11: "vii°" }; let roman = romans[degree] || "?"; 
+            if (quality === "min" || quality === "dim") roman = roman.toLowerCase(); if (quality === "maj") roman = roman.toUpperCase(); if (quality === "dim" && !roman.includes("°")) roman += "°"; 
+            const diatonicMap = {c:0, d:1, e:2, f:3, g:4, a:5, b:6}; let figures = []; 
+            [beat.t, beat.a, beat.s].forEach(v => { const vDia = diatonicMap[v.n]; const bDia = diatonicMap[beat.b.n]; let interval = (vDia - bDia + 7) % 7 + 1; let acc = v.acc || ""; let show = false; if (acc) show = true; if (interval === 4 || interval === 2 || interval === 6 || interval === 7 || interval === 9) show = true; if (show && interval !== 1 && interval !== 8) { figures.push({val:interval, acc:acc}); } }); 
+            figures.sort((a,b) => b.val - a.val); figures = figures.filter((f, index, self) => index === self.findIndex((t) => (t.val === f.val && t.acc === f.acc)) ); 
+            return { roman: roman, figures: figures }; 
+        }
+
+        window.hwAutoAnalyze = () => { hwSaveState(); const res = analyzeHarmonyForHW(hwScoreData[hwCurM].beats[hwCurB], hwScoreData[hwCurM].key); hwScoreData[hwCurM].beats[hwCurB].roman = res.roman; let figStr = res.figures.map(f => f.val + (f.acc==='n'?'♮':f.acc==='#'?'♯':f.acc==='b'?'♭':f.acc)).join(','); hwScoreData[hwCurM].beats[hwCurB].fig = figStr; hwUpdateUI(); hwRenderScore(); };
+        window.hwUpdateBeatMeta = () => { hwSaveState(); hwScoreData[hwCurM].beats[hwCurB].fig = document.getElementById('hw-input-fig').value.trim(); hwRenderScore(); };
+
+        function hwUpdateUI() {
+            document.querySelectorAll('.hw-btn-v').forEach(b => b.classList.toggle('selected', b.id === `hw-v-${hwCurV}`)); 
+            document.querySelectorAll('.hw-btn-n').forEach(b => b.classList.toggle('active', b.id === `hw-n-${hwScoreData[hwCurM].beats[hwCurB][hwCurV].n}`));
+            document.getElementById('hw-key-select').value = hwScoreData[hwCurM].key;
+            document.getElementById('hw-sheet-title-disp').innerText = document.getElementById('hw-studio-title').value || "NEW ASSIGNMENT";
+            
+            document.getElementById('hw-input-fig').value = hwScoreData[hwCurM].beats[hwCurB].fig || '';
+            
+            const btnHide = document.getElementById('hw-btn-hide');
+            if(hwScoreData[hwCurM].beats[hwCurB][hwCurV].hide) { btnHide.innerHTML = '<i class="fa-solid fa-eye"></i>'; btnHide.style.color = "white"; btnHide.style.background = "rgba(255,255,255,0.2)"; } 
+            else { btnHide.innerHTML = '<i class="fa-solid fa-eye-slash"></i>'; btnHide.style.color = "var(--primary)"; btnHide.style.background = "rgba(0,229,255,0.1)"; }
+        }
+        document.getElementById('hw-studio-title').addEventListener('input', () => { document.getElementById('hw-sheet-title-disp').innerText = document.getElementById('hw-studio-title').value || "NEW ASSIGNMENT"; });
+
+        function hwRenderScore() {
+            const outDiv = document.getElementById("hw-vexflow-out"); outDiv.innerHTML = ""; 
+            const paperW = 800; const marginX = 50; const SCALE = 0.72; const logicalUsableW = (paperW - (marginX*2)) / SCALE; 
+            const startX = 35; const rowHeight = 260; const staffGap = 90; 
+            
+            let layout = []; let curRow = [];
+            hwScoreData.forEach((measure, mIdx) => {
+                let mWidth = measure.beats.length * 60; 
+                if (mIdx === 0) mWidth += 70; else if (hwScoreData[mIdx-1].key !== measure.key) mWidth += 30;
+                curRow.push({ idx: mIdx, measure: measure, baseWidth: mWidth });
+                if (curRow.length === 4) { layout.push(curRow); curRow = []; }
+            });
+            if (curRow.length > 0) layout.push(curRow); 
+
+            layout.forEach((row) => {
+                let totalBaseW = row.reduce((sum, m) => sum + m.baseWidth, 0);
+                let stretchRatio = (row !== layout[layout.length-1] || row.length === 4) ? (logicalUsableW - startX - 20) / totalBaseW : 1.1;
+
+                const rowWrap = document.createElement('div'); rowWrap.className = 'hw-system-row'; rowWrap.style.height = `${rowHeight * SCALE}px`;
+                const scaleWrap = document.createElement('div'); scaleWrap.style.transform = `scale(${SCALE})`; scaleWrap.style.transformOrigin = 'top left'; scaleWrap.style.width = `${logicalUsableW}px`; scaleWrap.style.height = `${rowHeight}px`; scaleWrap.style.position = 'absolute'; scaleWrap.style.left = `${marginX}px`;
+                rowWrap.appendChild(scaleWrap); outDiv.appendChild(rowWrap);
+
+                const renderer = new VF.Renderer(scaleWrap, VF.Renderer.Backends.SVG); renderer.resize(logicalUsableW, rowHeight); const ctx = renderer.getContext();
+                let xPos = startX; let yPos = 10; 
+
+                row.forEach(mData => {
+                    const mIdx = mData.idx; const measure = mData.measure; const mWidth = mData.baseWidth * stretchRatio;
+                    const sT = new VF.Stave(xPos, yPos, mWidth); const sB = new VF.Stave(xPos, yPos + staffGap, mWidth); 
+                    
+                    if (mIdx === 0) { sT.addClef("treble"); sB.addClef("bass"); sT.addTimeSignature(measure.time); sB.addTimeSignature(measure.time); }
+                    if (mIdx===0 || hwScoreData[mIdx-1].key !== measure.key) { sT.addKeySignature(measure.key); sB.addKeySignature(measure.key); }
+                    
+                    sT.setContext(ctx).draw(); sB.setContext(ctx).draw();
+
+                    if (row.indexOf(mData) === 0) {
+                        new VF.StaveConnector(sT, sB).setType(VF.StaveConnector.type.BRACE).setContext(ctx).draw();
+                        new VF.StaveConnector(sT, sB).setType(VF.StaveConnector.type.SINGLE_LEFT).setContext(ctx).draw();
+                    }
+
+                    const createNotes = (part, clef, stem) => measure.beats.map((b, bIdx) => {
+                        const sn = new VF.StaveNote({ keys: [`${b[part].n}/${b[part].o}`], duration: "q", clef: clef, stem_direction: stem });
+                        if(b[part].acc) sn.addModifier(new VF.Accidental(b[part].acc));
+                        
+                        if (mIdx === hwCurM && bIdx === hwCurB && part === hwCurV) {
+                            sn.setStyle({ fillStyle: "var(--primary)", strokeStyle: "var(--primary)" }); 
+                        } else if (b[part].hide) {
+                            sn.setStyle({ fillStyle: "#00E5FF", strokeStyle: "#00E5FF" }); // สีฟ้าแปลว่าซ่อนให้เด็กทาย
+                        } else {
+                            sn.setStyle({ fillStyle: "#000", strokeStyle: "#000" }); 
+                        }
+                        return sn;
+                    });
+                    
+                    const numB = measure.beats.length;
+                    const vS = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('s','treble',1));
+                    const vA = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('a','treble',-1));
+                    const vT = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('t','bass',1));
+                    const vB = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('b','bass',-1));
+                    
+                    const noteStartX = sT.getNoteStartX();
+                    const formatWidth = Math.max(50, mWidth - (noteStartX - xPos) - 15);
+
+                    new VF.Formatter().joinVoices([vS, vA]).joinVoices([vT, vB]).format([vS, vA, vT, vB], formatWidth);
+                    vS.draw(ctx, sT); vA.draw(ctx, sT); vT.draw(ctx, sB); vB.draw(ctx, sB);
+
+                    measure.beats.forEach((b, bIdx) => {
+                        const noteX = vB.getTickables()[bIdx].getAbsoluteX();
+                        let nextNoteX = (bIdx < numB - 1) ? vB.getTickables()[bIdx+1].getAbsoluteX() : xPos + mWidth;
+                        let hitW = nextNoteX - noteX;
+                        const hb = document.createElement('div');
+                        hb.className = `hw-hitbox ${mIdx===hwCurM && bIdx===hwCurB ? 'active' : ''}`;
+                        hb.style.left = `${noteX - 15}px`; hb.style.top = `${yPos}px`; hb.style.width = `${Math.max(30, hitW)}px`; hb.style.height = `${staffGap + 70}px`;
+                        hb.onclick = () => window.hwSelectBeat(mIdx, bIdx);
+                        scaleWrap.appendChild(hb); 
+
+                        const textY = yPos + staffGap + 120; 
+                        if (b.roman) { ctx.setFont("Noto Serif", 16, "bold").setFillStyle("#111827"); ctx.fillText(b.roman, noteX - 5, textY); }
+                        if (b.fig) { ctx.setFont("Sarabun", 14, "bold").setFillStyle("#475569"); let startY = textY; if(b.fig.includes(',')) startY -= 5; const rW = ctx.measureText(b.roman||'').width; b.fig.split(',').forEach((f, i) => { ctx.fillText(f, noteX + rW + 2, startY + (i * 15)); }); }
+                    });
+                    xPos += mWidth;
+                });
+            });
+            document.getElementById('hw-paper').style.height = Math.max(1131, 150 + (layout.length * (rowHeight * SCALE + 25)) + 50) + "px";
+            applyHwZoom();
+        }
+
+        window.openPublishHwModal = async () => {
+            const title = document.getElementById('hw-studio-title').value.trim();
+            if(!title) return alert("กรุณาตั้งชื่อการบ้านด้านบนก่อนครับ");
+            const q = query(collection(db, "classes"), where("teacherId", "==", auth.currentUser.uid)); const snap = await getDocs(q);
+            const select = document.getElementById('hw-pub-class'); select.innerHTML = "";
+            if(snap.empty) return alert("คุณต้องสร้างห้องเรียนก่อน"); 
+            snap.forEach(d => { select.innerHTML += `<option value="${d.id}">${d.data().name}</option>`; });
+            openModal('publishHwModal');
+        };
+
+        window.confirmPublishHw = async () => {
+            const title = document.getElementById('hw-studio-title').value.trim();
+            const classId = document.getElementById('hw-pub-class').value;
+            const timeLimit = parseInt(document.getElementById('hw-pub-time').value);
+
+            const hwData = {
+                name: title, teacherId: auth.currentUser.uid, classId: classId,
+                type: 'hw-studio-custom', scoreData: hwScoreData,
+                timeLimit: timeLimit,
+                active: true, createdAt: serverTimestamp()
+            };
+
+            try {
+                await addDoc(collection(db, "exams"), hwData);
+                alert("มอบหมายการบ้านเรียบร้อย!"); closeModal('publishHwModal'); closeHwStudio(); loadExams();
+            } catch(e) { alert("Error: " + e.message); }
+        };
+
+        // --- View Submissions & Grader ---
+        window.loadExams = async () => {
+            const list = document.getElementById('exams-list'); const q = query(collection(db, "exams"), where("teacherId", "==", auth.currentUser.uid)); const snap = await getDocs(q); list.innerHTML = "";
+            if(snap.empty) return list.innerHTML = "<div style='text-align:center; color:var(--text-dim); padding: 20px;'>ยังไม่ได้สร้างการบ้านเลยครับ</div>";
+            snap.forEach(docSnap => {
+                const data = docSnap.data();
+                let typeBadge = data.type.includes('hw-studio') ? '<span style="background:var(--primary); color:#0F172A; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:800;">Studio Pro</span>' : '<span style="background:#334155; padding:2px 8px; border-radius:10px; font-size:0.7rem;">Quiz</span>';
+                list.innerHTML += `<div class="list-item"><div class="item-info"><h4>${data.name} ${typeBadge}</h4><span class="item-code" style="border:none; color:var(--text-dim); background:rgba(255,255,255,0.05);">ห้อง: ${data.classId}</span></div><div class="action-btns"><button class="btn-icon" onclick="viewSubmissions('${docSnap.id}', '${data.classId}')" style="background:var(--success); color:#022c22;"><i class="fa-solid fa-inbox"></i> ตรวจงาน</button><button class="btn-icon del" onclick="deleteExam('${docSnap.id}', '${data.name}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
+            });
+        };
+
+        window.deleteExam = async (id, name) => {
+            if(confirm(`ต้องการลบการบ้าน "${name}" ใช่หรือไม่?`)) {
+                await deleteDoc(doc(db, "exams", id)); loadExams();
+            }
+        };
+
+        window.viewSubmissions = async (examId, targetClassId) => {
+            openModal('submissionsModal'); const list = document.getElementById('submissions-list-container'); list.innerHTML = '<div style="text-align:center; margin-top:20px; color:var(--text-dim);"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div>';
+            try {
+                const classQ = query(collection(db, "users"), where("classId", "==", targetClassId)); const classSnap = await getDocs(classQ);
+                let allStudentsInClass = []; classSnap.forEach(d => allStudentsInClass.push({uid: d.id, name: d.data().displayName, avatar: d.data().photoURL}));
+                const subSnap = await getDocs(collection(db, "exams", examId, "results")); let submittedUids = []; let submissionsData = {};
+                subSnap.forEach(d => { submittedUids.push(d.id); submissionsData[d.id] = d.data(); });
+
+                document.getElementById('sub-done-count').innerText = submittedUids.length; document.getElementById('sub-wait-count').innerText = allStudentsInClass.length - submittedUids.length;
+                list.innerHTML = "";
+                allStudentsInClass.forEach(stu => {
+                    if(submittedUids.includes(stu.uid)) {
+                        const d = submissionsData[stu.uid];
+                        list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding: 15px; border: 1px solid var(--success); background:rgba(16,185,129,0.05); border-radius:12px; margin-bottom:10px;"><div style="display:flex; align-items:center; gap:12px;"><img src="${stu.avatar}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--success);"><div><div style="color:white; font-weight:800; font-size:1.1rem; font-family:'Montserrat';">${stu.name}</div><div style="color:var(--success); font-size:0.8rem;"><i class="fa-solid fa-check"></i> ส่งแล้ว</div></div></div><button class="btn-icon" style="background:var(--primary); color:#000; padding:8px 15px;" onclick='openGrader("${stu.name.replace(/'/g, "\\'")}", ${JSON.stringify(d.answers || "[]")})'><i class="fa-solid fa-eye"></i> ดูสมุด</button></div>`;
+                    } else {
+                        list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding: 15px; border: 1px dashed var(--glass-border); background:rgba(255,255,255,0.02); border-radius:12px; margin-bottom:10px; opacity:0.6;"><div style="display:flex; align-items:center; gap:12px;"><img src="${stu.avatar}" style="width:40px; height:40px; border-radius:50%; filter:grayscale(100%);"><div><div style="color:white; font-weight:800; font-size:1.1rem; font-family:'Montserrat';">${stu.name}</div><div style="color:var(--danger); font-size:0.8rem;"><i class="fa-solid fa-xmark"></i> ยังไม่ส่ง</div></div></div></div>`;
+                    }
+                });
+                if(allStudentsInClass.length === 0) list.innerHTML = "<div style='text-align:center; color:var(--text-dim); margin-top:20px;'>ห้องเรียนนี้ยังไม่มีนักเรียนเข้าร่วม</div>";
+            } catch(e) { list.innerHTML = "<div style='color:var(--danger); text-align:center;'>โหลดล้มเหลว</div>"; }
+        };
+
+        window.openGrader = (studentName, answersStr) => {
+            document.getElementById('student-name-disp').innerText = studentName; document.getElementById('graderModal').classList.add('open');
+            let studentScoreData = []; try { studentScoreData = typeof answersStr === 'string' ? JSON.parse(answersStr) : answersStr; } catch(e) { return alert("ข้อมูลโน้ตมีปัญหา"); }
+            renderStudentPaper(studentScoreData);
+        };
+
+        function renderStudentPaper(scoreData) {
+            const outDiv = document.getElementById("grader-vexflow-out"); outDiv.innerHTML = ""; 
+            if(!scoreData || scoreData.length === 0) return outDiv.innerHTML = "ไม่มีข้อมูลโน้ต";
+            const SCALE = 0.75; const paperW = 800; const marginX = 50; const logicalUsableW = (paperW - (marginX * 2)) / SCALE; 
+            const startX = 35; const rowHeight = 260; const staffGap = 90; 
+            
+            let layout = []; let curRow = [];
+            scoreData.forEach((m, mIdx) => { let mWidth = m.beats.length * 55; if (mIdx === 0) mWidth += 70; else if (scoreData[mIdx-1].key !== m.key) mWidth += 30; curRow.push({ idx: mIdx, measure: m, baseWidth: mWidth }); if (curRow.length === 4) { layout.push(curRow); curRow = []; } });
+            if (curRow.length > 0) layout.push(curRow); 
+
+            layout.forEach((row) => {
+                let totalBaseW = row.reduce((sum, m) => sum + m.baseWidth, 0); let stretchRatio = (row !== layout[layout.length-1] || row.length === 4) ? (logicalUsableW - startX - 20) / totalBaseW : 1.05;
+                const rowWrap = document.createElement('div'); rowWrap.className = 'system-row'; rowWrap.style.height = `${rowHeight * SCALE}px`;
+                const scaleWrap = document.createElement('div'); scaleWrap.style.transform = `scale(${SCALE})`; scaleWrap.style.transformOrigin = 'top left'; scaleWrap.style.width = `${logicalUsableW}px`; scaleWrap.style.height = `${rowHeight}px`; scaleWrap.style.position = 'absolute'; scaleWrap.style.left = `${marginX}px`;
+                rowWrap.appendChild(scaleWrap); outDiv.appendChild(rowWrap);
+
+                const renderer = new VF.Renderer(scaleWrap, VF.Renderer.Backends.SVG); renderer.resize(logicalUsableW, rowHeight); const ctx = renderer.getContext();
+                let xPos = startX; let yPos = 30; 
+
+                row.forEach(mData => {
+                    const mIdx = mData.idx; const measure = mData.measure; const mWidth = mData.baseWidth * stretchRatio;
+                    const sT = new VF.Stave(xPos, yPos, mWidth); const sB = new VF.Stave(xPos, yPos + staffGap, mWidth); 
+                    if (mIdx === 0) { sT.addClef("treble"); sB.addClef("bass"); sT.addKeySignature(measure.key); sB.addKeySignature(measure.key); sT.addTimeSignature(measure.time || "4/4"); sB.addTimeSignature(measure.time || "4/4"); } 
+                    else if (mIdx===0 || scoreData[mIdx-1].key !== measure.key) { sT.addKeySignature(measure.key); sB.addKeySignature(measure.key); }
+                    if (mIdx === scoreData.length - 1) { sT.setEndBarType(VF.Barline.type.END); sB.setEndBarType(VF.Barline.type.END); }
+                    sT.setContext(ctx).draw(); sB.setContext(ctx).draw();
+                    if (row.indexOf(mData) === 0) { new VF.StaveConnector(sT, sB).setType(VF.StaveConnector.type.BRACE).setContext(ctx).draw(); new VF.StaveConnector(sT, sB).setType(VF.StaveConnector.type.SINGLE_LEFT).setContext(ctx).draw(); }
+
+                    ctx.setFont("Sarabun", 18, "bold").setFillStyle("#64748B"); ctx.fillText(mIdx + 1, xPos, yPos - 10);
+
+                    const createNotes = (part, clef, stem) => measure.beats.map((b) => {
+                        const vObj = b[part];
+                        if(!vObj) { const n = new VF.StaveNote({keys:[{s:"g/5", a:"c/4", t:"e/4", b:"c/3"}[part]], duration:"q", clef:clef}); n.setStemDirection(stem); n.setStyle({fillStyle:"#CBD5E1", strokeStyle:"#CBD5E1"}); return n; } 
+                        else {
+                            const n = new VF.StaveNote({keys:[`${vObj.n}/${vObj.o}`], duration:"q", clef:clef}); if(vObj.acc) n.addModifier(new VF.Accidental(vObj.acc)); n.setStemDirection(stem);
+                            if(vObj.hide) { n.setStyle({fillStyle:"#10B981", strokeStyle:"#10B981"}); } else { n.setStyle({fillStyle:"#0F172A", strokeStyle:"#0F172A"}); }
+                            return n;
+                        }
+                    });
+                    
+                    const numB = measure.beats.length;
+                    const vS = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('s','treble',1));
+                    const vA = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('a','treble',-1));
+                    const vT = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('t','bass',1));
+                    const vB = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('b','bass',-1));
+                    
+                    new VF.Formatter().joinVoices([vS, vA]).joinVoices([vT, vB]).format([vS, vA, vT, vB], Math.max(50, mWidth - (sT.getNoteStartX() - xPos) - 15));
+                    vS.draw(ctx, sT); vA.draw(ctx, sT); vT.draw(ctx, sB); vB.draw(ctx, sB);
+
+                    measure.beats.forEach((beat, bIdx) => {
+                        const nx = vB.getTickables()[bIdx].getAbsoluteX(); let startY = yPos + staffGap + 120; let textX = nx; let rWidth = 0;
+                        if (beat.roman) { ctx.setFont("Noto Serif", 14, "bold").setFillStyle("#111827"); rWidth = ctx.measureText(beat.roman).width; ctx.fillText(beat.roman, nx - (rWidth/2), startY); textX = nx + (rWidth/2) + 2; }
+                        if (beat.fig) { ctx.setFont("Sarabun", 11, "bold").setFillStyle("#475569"); let figs = beat.fig.includes(',') ? beat.fig.split(',') : beat.fig.split(''); let fty = startY - (figs.length > 1 ? 8 : 0); if(!beat.roman) textX = nx - 4; figs.forEach((f, i) => { ctx.fillText(f, textX, fty + (i * 10)); }); }
+                    }); 
+                    xPos += mWidth;
+                });
+            });
+            document.getElementById('grader-wrapper').style.height = Math.max(500, 150 + (layout.length * (rowHeight * SCALE + 25))) + "px";
+        }
+    </script>
+</body>
+</html>

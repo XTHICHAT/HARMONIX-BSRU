@@ -3,149 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Harmonix - Studio</title>
+    <title>Harmonix - Studio Pro v3.7</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Noto+Serif:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@900&family=Noto+Serif:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* (CSS เดิมทั้งหมด) */
+        /* --- THEME: PRO NOTATION --- */
         :root { 
-            --bg-app: #0F172A; --surface: #1E293B; --active-note: #FACC15; --voice-highlight: #38BDF8; --text-main: #F1F5F9; 
-            --border-color: #334155; --btn-bg: #334155; --error: #F43F5E; --success: #34D399;
-            --shadow-dark: #020617; --shadow-purple: #7e22ce; --shadow-red: #b91c1c; --shadow-blue: #0369a1;
+            --bg-workspace: #1E1F26; --paper-bg: #FFFFFF;
+            --primary: #8B5CF6; --primary-shadow: #7c3aed;
+            --gold: #F59E0B; --rose: #F43F5E; --green: #10B981;
+            --panel-bg: rgba(30, 31, 38, 0.95); --text-main: #F8FAFC;
         }
+        
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-app); margin: 0; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; color: var(--text-main); }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-workspace); margin: 0; height: 100dvh; display: flex; flex-direction: column; color: var(--text-main); overflow: hidden; overscroll-behavior-y: none; }
 
-        /* Top Bar */
-        #top-bar { flex-shrink: 0; height: 50px; padding: 0 15px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; background: var(--surface); border-bottom: 1px solid var(--border-color); z-index: 20; }
-        .back-btn { text-decoration: none; font-weight: 700; color: #94A3B8; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; justify-self: start; transition: 0.2s; }
-        .back-btn:active { transform: scale(0.95); color: white; }
-        .logo { font-weight: 800; color: #38BDF8; letter-spacing: 1px; font-size: 1.1rem; justify-self: center; }
-        .key-wrapper { justify-self: end; }
-        #key-select { appearance: none; background-color: #1e293b; color: var(--active-note); padding: 5px 12px; border-radius: 8px; border: 1px solid #334155; font-family: 'Sarabun'; font-weight: 700; font-size: 0.85rem; cursor: pointer; text-align: center; outline: none; transition: 0.1s; box-shadow: 0 3px 0 #0f172a; }
-        #key-select:active { transform: translateY(3px); box-shadow: 0 0 0 #0f172a; }
-
-        /* Score Area */
-        #score-area { flex: 1; position: relative; display: flex; align-items: center; overflow: hidden; background: radial-gradient(circle at center, #263346 0%, #0F172A 100%); box-shadow: inset 0 0 50px rgba(0,0,0,0.6); min-height: 0; }
-        /* เพิ่ม cursor: grab ให้รู้ว่าลากได้ */
-        #vexflow-wrapper { flex: 1; overflow-x: auto; overflow-y: hidden; display: flex; align-items: center; padding: 0 10px; white-space: nowrap; scrollbar-width: none; height: 100%; cursor: grab; }
-        #vexflow-wrapper.active { cursor: grabbing; } /* ตอนลากให้เป็นมือกำ */
-        #vexflow-wrapper::-webkit-scrollbar { display: none; }
-        #vexflow-out { min-width: 1800px; filter: invert(100%) opacity(0.9) drop-shadow(0 0 2px rgba(255,255,255,0.2)); display: inline-block; width: fit-content; }
-
-        /* Warning Bar */
-        #warning-bar { width: 100%; flex-shrink: 0; background: #162032; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 8px 15px; font-size: 0.9rem; font-weight: bold; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; color: var(--text-main); }
-        .status-ok { color: var(--success); text-align: right; }
-        .status-err { color: var(--error); text-align: right; animation: pulse 1s infinite; }
-        .chord-info { display: flex; gap: 10px; color: var(--active-note); align-items: center; }
-        .cadence-badge { background: #334155; color: #38BDF8; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; text-transform: uppercase; }
-
-        /* Controls */
-        #controls { flex-shrink: 0; background: var(--surface); border-top: 1px solid var(--border-color); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 15px 10px 20px 10px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 -10px 40px rgba(0,0,0,0.5); height: auto; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+        /* --- TOP TAB BAR (แก้ไขการเบียดกัน) --- */
+        #top-toolbar { 
+            flex-shrink: 0; height: 55px; 
+            padding: 0 5px; /* ลดขอบซ้ายขวา */
+            display: flex; align-items: center; justify-content: space-between; 
+            background: #14151A; z-index: 50; box-shadow: 0 2px 10px rgba(0,0,0,0.5); 
+            overflow-x: auto; /* ให้เลื่อนได้ถ้าจอเล็กจัด */
+        }
+        #top-toolbar::-webkit-scrollbar { display: none; } /* ซ่อนแถบเลื่อน */
         
-        /* Beat Scroll: เพิ่ม cursor grab และแก้ให้ลากได้ในคอม */
-        .beat-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; flex-shrink: 0; cursor: grab; user-select: none; }
-        .beat-scroll.active { cursor: grabbing; }
+        .toolbar-group { display: flex; gap: 3px; align-items: center; } /* ลดระยะห่างระหว่างปุ่ม */
         
-        .beat-box { min-width: 45px; height: 45px; background: #0F172A; border: 2px solid var(--border-color); border-radius: 12px; color: #64748B; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; transition: 0.1s; box-shadow: 0 3px 0 #020617; }
-        .beat-box:active { transform: translateY(3px); box-shadow: none; }
-        .beat-box span { font-size: 0.6rem; text-transform: uppercase; }
-        .beat-box.active { border-color: #38BDF8; color: #38BDF8; background: rgba(56, 189, 248, 0.1); box-shadow: 0 3px 0 #0ea5e9; transform: translateY(0); }
-        .beat-box.active:active { transform: translateY(3px); box-shadow: none; }
-        .beat-box.error { border-color: var(--error); background: rgba(244, 63, 94, 0.1); color: var(--error); box-shadow: 0 3px 0 #be123c; }
+        .btn-top { 
+            background: transparent; color: var(--primary); border: none; border-radius: 6px; 
+            width: 35px; height: 35px; /* ลดขนาดปุ่มลงจาก 40px เป็น 35px */
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.1rem; cursor: pointer; transition: 0.1s; 
+            flex-shrink: 0; /* ป้องกันปุ่มถูกบีบจนเบี้ยว */
+        }
+        .btn-top:active { transform: scale(0.9); background: rgba(139, 92, 246, 0.2); }
+        
+        .top-select { 
+            appearance: none; -webkit-appearance: none; -moz-appearance: none;
+            background: transparent; color: var(--primary); 
+            width: 42px; height: 35px; padding: 0; 
+            border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.4); 
+            font-family: 'Sarabun', sans-serif; font-weight: bold; font-size: 1rem; 
+            text-align: center; text-align-last: center; 
+            cursor: pointer; outline: none; transition: 0.1s;
+            flex-shrink: 0;
+        }
+        .top-select:hover, .top-select:active { background: rgba(139, 92, 246, 0.1); border-color: var(--primary); }
+        .top-select option { background: #1E1F26; color: white; text-align: center; }
 
-        .grid-main { display: grid; grid-template-columns: 60px 1fr; gap: 10px; }
+        /* --- WARNING BAR --- */
+        #warning-bar { flex-shrink: 0; background: #0F1115; border-top: 1px solid #333; border-bottom: 2px solid #000; padding: 8px 15px; font-size: 0.85rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; color: var(--text-main); z-index: 40; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .status-ok { color: var(--green); display: flex; align-items: center; gap: 5px; }
+        .status-err { color: var(--rose); display: flex; align-items: center; gap: 5px; }
+        .chord-info { display: flex; gap: 10px; color: var(--gold); align-items: center; font-family: 'Noto Serif', serif; }
+        .cadence-badge-top { background: rgba(139, 92, 246, 0.15); color: var(--primary); padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-family: 'Sarabun'; font-weight: 900; border: 1px solid rgba(139, 92, 246, 0.5); letter-spacing: 0.5px;}
+
+        /* --- WORKSPACE & A4 PAPER --- */
+        #workspace { flex: 1; overflow: auto; position: relative; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+        #paper-wrapper { padding: 40px; margin: 0 auto; display: flex; justify-content: center; align-items: flex-start; min-width: fit-content; min-height: fit-content; transition: 0.3s; }
+        
+        #paper { width: 800px; min-height: 1131px; background: var(--paper-bg); box-shadow: 0 15px 50px rgba(0,0,0,0.8); position: relative; transform-origin: top left; display: flex; flex-direction: column; }
+        
+        #sheet-header { padding: 40px 50px 10px 50px; flex-shrink: 0; transition: 0.2s; }
+        .sheet-title { text-align: center; color: #000; font-family: 'Noto Serif', serif; margin: 0; font-size: 2.5rem; font-weight: 900; letter-spacing: 1px; outline: none; cursor: text; transition: 0.2s; }
+        .sheet-subtitle { text-align: center; color: #555; font-family: 'Noto Serif', serif; margin: 5px 0 0 0; font-size: 1.1rem; font-style: italic; outline: none; cursor: text; transition: 0.2s; }
+        .sheet-composer { text-align: right; color: #000; font-family: 'Noto Serif', serif; margin: 15px 0 0 0; font-size: 0.9rem; font-weight: bold; outline: none; cursor: text; transition: 0.2s; }
+        
+        .sheet-title:focus, .sheet-subtitle:focus, .sheet-composer:focus { border-bottom: 2px dashed #CBD5E1; }
+        [contenteditable]:empty { margin: 0 !important; font-size: 0.8rem; opacity: 0.3; }
+        [contenteditable]:empty:focus { font-size: 2rem; opacity: 1; margin: 10px 0 !important; }
+        [contenteditable]:empty::before { content: attr(data-placeholder); color: #94A3B8; font-style: italic; }
+
+        #vexflow-out { flex: 1; display: flex; flex-direction: column; width: 100%; position: relative; }
+        .system-row { position: relative; width: 100%; margin-bottom: 30px; page-break-inside: avoid; }
+        
+        .hitbox { position: absolute; pointer-events: auto; cursor: pointer; border-radius: 4px; transition: 0.1s; border: none; background: transparent; }
+        .hitbox:active { background: rgba(139, 92, 246, 0.05); }
+
+        .cadence-paper { position: absolute; background: transparent; color: var(--primary); font-size: 1.2rem; font-weight: 900; transform: translateX(-50%); pointer-events: none; font-family: 'Sarabun'; }
+
+        /* --- ปรับปรุงส่วน Footer --- */
+        #sheet-footer { 
+            flex-shrink: 0; 
+            padding: 10px 20px;
+            text-align: center; 
+            color: #777; 
+            font-family: 'Noto Serif', serif; 
+            font-size: 0.75rem; 
+            outline: none; 
+            cursor: text;
+            margin-top: auto;
+            position: relative;
+            bottom: 20px;
+        }
+
+        /* --- PDF EXPORT OVERRIDE --- */
+        .pdf-exporting #workspace { position: static !important; overflow: visible !important; }
+        .pdf-exporting #paper-wrapper { display: block !important; position: absolute !important; top: 0 !important; left: 0 !important; padding: 0 !important; margin: 0 !important; width: 800px !important; }
+        .pdf-exporting #paper { transform: scale(1) !important; margin: 0 !important; box-shadow: none !important; border: none !important; }
+        .pdf-exporting [data-hide-print="true"] { display: none !important; }
+        .pdf-exporting .hitbox { display: none !important; }
+
+        /* --- FLOATING BUTTON --- */
+        #fab-note { 
+            position: fixed; bottom: 25px; right: 25px; width: 55px; height: 55px; 
+            border-radius: 14px; background: #1E1E24; color: var(--primary); 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 1.6rem; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.7); 
+            z-index: 100; transition: 0.2s; border: 2px solid #333; 
+        }
+        #fab-note:active { transform: scale(0.9); background: #2C3136; }
+        
+        /* Note Menu */
+        #note-menu { position: fixed; bottom: 0; left: 0; width: 100%; max-width: 600px; background: #23252E; border-top: 1px solid #333; border-radius: 20px 20px 0 0; padding: 20px 15px; padding-bottom: max(20px, env(safe-area-inset-bottom)); box-shadow: 0 -10px 40px rgba(0,0,0,0.9); z-index: 150; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); left: 50%; translate: -50% 0; }
+        #note-menu.open { transform: translateY(0); }
+        .menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .menu-title { font-weight: 800; color: var(--gold); }
+        .btn-close-menu { background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
+
+        .keyboard-grid { display: grid; grid-template-columns: 50px 1fr; gap: 10px; }
         .voice-col { display: flex; flex-direction: column; gap: 6px; }
-        .btn-v { flex: 1; background: #334155; border: none; border-radius: 8px; color: #94A3B8; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.1s; padding: 0; box-shadow: 0 3px 0 #0f172a; position: relative; }
-        .btn-v:active { transform: translateY(3px); box-shadow: none; }
-        .btn-v.selected { background: var(--active-note); color: #0F172A; box-shadow: 0 3px 0 #b45309; transform: translateY(0); }
-        .btn-v.selected:active { transform: translateY(3px); box-shadow: none; }
-
+        .btn-v { flex: 1; background: #333; border: none; border-radius: 8px; color: #A0ABB8; font-weight: 800; font-size: 0.9rem; cursor: pointer; }
+        .btn-v.selected { background: var(--primary); color: white; box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
         .note-area { display: flex; flex-direction: column; gap: 8px; }
-        .note-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex: 1; }
-        .btn-n { background: #1e293b; border: 1px solid #334155; border-radius: 10px; color: white; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.1s; height: 45px; box-shadow: 0 4px 0 var(--shadow-dark); position: relative; top: 0; }
-        .btn-n:active { transform: translateY(4px); box-shadow: none; }
-        .btn-n.active { background: #C084FC; color: white; border: none; box-shadow: 0 4px 0 var(--shadow-purple); }
-        .btn-n.active:active { transform: translateY(4px); box-shadow: none; }
+        .note-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; flex: 1; }
+        .btn-n { background: #3A3D4A; color: #F8FAFC; border: none; border-radius: 8px; font-size: 1.2rem; font-weight: 900; cursor: pointer; height: 50px; }
+        .btn-n:active { transform: scale(0.95); }
+        .btn-n.active { background: var(--primary); color: white; }
+        .tools-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .btn-tool { background: #1E1E24; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 1rem; height: 45px; display: flex; align-items: center; justify-content: center; }
+        .btn-tool:active { transform: scale(0.95); }
+        .btn-tool.btn-undo { color: var(--rose); }
+        .acc-text { font-family: 'Times New Roman', serif; font-size: 1.5rem; line-height: 1; }
 
-        .tools-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; height: 40px; }
-        .btn-tool { background: #334155; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 0.85rem; box-shadow: 0 4px 0 var(--shadow-dark); transition: 0.1s; }
-        .btn-tool:active { transform: translateY(4px); box-shadow: none; }
-        
-        .btn-tool.undo-btn { background: #EF4444; box-shadow: 0 4px 0 var(--shadow-red); }
-        .btn-tool.undo-btn:active { transform: translateY(4px); box-shadow: none; }
-        
-        .btn-tool.play-btn { background: #38BDF8; color:#0F172A; box-shadow: 0 4px 0 var(--shadow-blue); }
-        .btn-tool.play-btn.playing { background: #F43F5E; color: white; box-shadow: 0 4px 0 var(--shadow-red); animation: pulse 1s infinite; }
-        .btn-tool.play-btn:active { transform: translateY(4px); box-shadow: none; }
-
-        .btn-tool.inv-btn { background: #C084FC; color:#0F172A; box-shadow: 0 4px 0 var(--shadow-purple); }
-        .btn-tool.inv-btn:active { transform: translateY(4px); box-shadow: none; }
-
-        .acc-text { font-family: 'Times New Roman', serif; font-size: 1.4rem; line-height: 1; }
-
-        /* Tour Guide */
-        #tour-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9998; display: none; opacity: 0; transition: opacity 0.3s; }
-        #tour-backdrop.active { display: block; opacity: 1; }
-        #tour-tooltip { position: fixed; width: 280px; background: #1E293B; color: #F1F5F9; padding: 20px; border-radius: 16px; border: 2px solid #38BDF8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); z-index: 10000; display: none; transition: all 0.3s ease; }
-        #tour-tooltip::after { content: ''; position: absolute; border-width: 10px; border-style: solid; border-color: #38BDF8 transparent transparent transparent; bottom: -22px; left: 50%; transform: translateX(-50%); }
-        #tour-tooltip.top::after { top: 100%; bottom: auto; border-color: #38BDF8 transparent transparent transparent; }
-        #tour-tooltip.bottom::after { bottom: 100%; top: auto; border-color: transparent transparent #38BDF8 transparent; }
-        .tour-focus { position: relative; z-index: 9999 !important; box-shadow: 0 0 0 4px #FACC15, 0 0 50px rgba(0,0,0,0.9) !important; background-color: #1E293B !important; border-radius: 8px; transition: box-shadow 0.3s; pointer-events: none; }
-        .tour-controls { display: flex; justify-content: space-between; margin-top: 15px; }
-        .btn-tour { padding: 8px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-family: 'Sarabun', sans-serif; transition:0.2s; }
-        .btn-next { background: #38BDF8; color: #093649; } .btn-next:hover{ background: #7DD3FC; }
-        .btn-skip { background: transparent; color: #94A3B8; } .btn-skip:hover{ color: #E2E8F0; }
-        .btn-start-tour { position: fixed; bottom: 300px; right: 20px; top: auto; margin-top: 0; width: 50px; height: 50px; border-radius: 50%; background: #38BDF8; color: #093649; border: 3px solid #1E293B; font-size: 1.6rem; font-weight: bold; cursor: pointer; z-index: 9000; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; animation: tourPulse 2s infinite; }
-        @keyframes tourPulse { 0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); transform: scale(1); } 70% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); transform: scale(1.05); } 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); transform: scale(1); } }
-        @media (max-width: 480px) { .btn-start-tour { right: 10px; width: 45px; height: 45px; font-size: 1.4rem; margin-top:-22.5px; } }
+        /* Settings Modal */
+        #settings-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        #settings-modal.show { display: flex; }
+        .settings-content { background: #1E293B; padding: 25px; border-radius: 16px; width: 90%; max-width: 350px; border: 2px solid #334155; box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
+        .settings-title { color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px; font-family: 'Cinzel', serif; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; color: #CBD5E1; font-weight: bold; font-size: 0.95rem; }
+        .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #334155; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+        .btn-close-settings { width: 100%; background: var(--primary); border: none; border-radius: 8px; padding: 12px; color: white; font-weight: 900; font-size: 1rem; cursor: pointer; margin-top: 10px; font-family: 'Sarabun'; }
+        .btn-close-settings:active { transform: scale(0.98); }
+        /* --- ปรับแต่งแผงควบคุมสำหรับหน้าจอคอมพิวเตอร์ --- */
+        @media (min-width: 800px) {
+            #note-menu {
+                max-width: 420px; 
+                left: auto; 
+                right: 30px; 
+                translate: 0 0; 
+                padding: 15px 15px 20px 15px; 
+                border-radius: 16px 16px 0 0; 
+            }
+            .keyboard-grid { grid-template-columns: 40px 1fr; gap: 8px; }
+            .btn-v { font-size: 0.8rem; }
+            .btn-n { height: 40px; font-size: 1rem; }
+            .btn-tool { height: 35px; font-size: 0.85rem; }
+            .acc-text { font-size: 1.2rem; }
+            .menu-title { font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body>
-    <div id="top-bar">
-        <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> <span>ออก</span></a>
-        <div class="logo">HARMONIX</div>
-        <div class="key-wrapper">
-            <select id="key-select" onchange="playSfx('click'); changeKey(this.value)">
-                <option value="C">Key: C</option>
-                <option value="G">Key: G</option>
-                <option value="D">Key: D</option>
-                <option value="F">Key: F</option>
-                <option value="Bb">Key: Bb</option>
-                <option value="Am">Key: Am</option>
-                <option value="Em">Key: Em</option>
-            </select>
+    <div id="top-toolbar">
+        <div class="toolbar-group">
+            <a href="index.html" class="btn-top" style="text-decoration:none;"><i class="fa-solid fa-chevron-left"></i></a>
+            <button class="btn-top" onclick="togglePlay()" id="btn-play" title="Play"><i class="fa-solid fa-play" id="btn-play-icon"></i></button>
+            <button class="btn-top" onclick="undo()" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
         </div>
-    </div>
-
-    <div id="score-area">
-        <div id="vexflow-wrapper">
-            <div id="vexflow-out"></div>
+        
+        <div class="toolbar-group">
+            <button class="btn-top" onclick="addMeasure()" title="Add Measure"><i class="fa-solid fa-plus"></i></button>
+            <select id="key-select" class="top-select" onchange="changeKey(this.value)">
+                <optgroup label="Major Keys">
+                    <option value="C">C</option>
+                    <option value="G">G</option> <option value="D">D</option> <option value="A">A</option>
+                    <option value="E">E</option> <option value="B">B</option> <option value="F#">F#</option> <option value="C#">C#</option>
+                    <option value="F">F</option> <option value="Bb">Bb</option> <option value="Eb">Eb</option>
+                    <option value="Ab">Ab</option> <option value="Db">Db</option> <option value="Gb">Gb</option> <option value="Cb">Cb</option>
+                </optgroup>
+                <optgroup label="Minor Keys">
+                    <option value="Am">Am</option>
+                    <option value="Em">Em</option> <option value="Bm">Bm</option> <option value="F#m">F#m</option>
+                    <option value="C#m">C#m</option> <option value="G#m">G#m</option> <option value="D#m">D#m</option> <option value="A#m">A#m</option>
+                    <option value="Dm">Dm</option> <option value="Gm">Gm</option> <option value="Cm">Cm</option>
+                    <option value="Fm">Fm</option> <option value="Bbm">Bbm</option> <option value="Ebm">Ebm</option> <option value="Abm">Abm</option>
+                </optgroup>
+            </select>
+            <button class="btn-top" onclick="deleteMeasure()" style="color:var(--rose);" title="Delete Measure"><i class="fa-solid fa-trash"></i></button>
+            <button class="btn-top" onclick="toggleSettings()" title="Settings"><i class="fa-solid fa-gear"></i></button>
+            <button class="btn-top" onclick="exportToPDF()" style="color:var(--gold);" title="Export PDF"><i class="fa-solid fa-file-pdf"></i></button>
         </div>
     </div>
 
     <div id="warning-bar">
         <div class="chord-info">
-            <span>Chord: <span id="txt-chord" style="color:white;">-</span></span>
-            <span id="ui-cadence" class="cadence-badge hidden"></span>
+            <span style="color:#64748B;">CHORD:</span> <span id="txt-chord" style="color:var(--gold); font-weight:900;">-</span>
+            <span id="ui-cadence" class="cadence-badge-top" style="display:none;"></span>
         </div>
-        <div></div>
         <div id="ui-message" class="status-ok"><i class="fa-solid fa-circle-check"></i> ถูกต้อง</div>
     </div>
 
-    <div id="controls">
-        <div class="beat-scroll" id="beat-list"></div>
-        
-        <div class="grid-main">
+    <div id="workspace">
+        <div id="paper-wrapper">
+            <div id="paper">
+                <div id="sheet-header">
+                    <h1 class="sheet-title" contenteditable="true" spellcheck="false" data-placeholder="คลิกเพื่อพิมพ์ชื่อเพลง">HARMONIX</h1>
+                    <p class="sheet-subtitle" contenteditable="true" spellcheck="false" data-placeholder="คำบรรยาย / เครื่องดนตรี">for 4-Part Harmony</p>
+                    <p class="sheet-composer" contenteditable="true" spellcheck="false" data-placeholder="ชื่อผู้แต่ง">STUDIO PRO</p>
+                </div>
+                
+                <div id="vexflow-out"></div>
+                
+                <div id="sheet-footer" contenteditable="true" spellcheck="false" data-placeholder="ลิขสิทธิ์ / ข้อมูลเพิ่มเติม">Copyright © 2026</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="fab-note" onclick="toggleNoteMenu()">
+        <i class="fa-solid fa-music"></i>
+    </div>
+
+    <div id="settings-modal">
+        <div class="settings-content">
+            <h3 class="settings-title">SETTINGS</h3>
+            <div class="setting-row">
+                <span>แสดงตัวเลข Figured Bass</span>
+                <label class="switch"><input type="checkbox" id="set-fig" checked onchange="updateSettings()"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+                <span>เปิดระบบเช็ค Error อัตโนมัติ</span>
+                <label class="switch"><input type="checkbox" id="set-err" checked onchange="updateSettings()"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+                <span>แสดงเลขโรมัน (Roman)</span>
+                <label class="switch"><input type="checkbox" id="set-rom" checked onchange="updateSettings()"><span class="slider"></span></label>
+            </div>
+            <button class="btn-close-settings" onclick="toggleSettings()">เสร็จสิ้น</button>
+        </div>
+    </div>
+
+    <div id="note-menu">
+        <div class="menu-header">
+            <div class="menu-title" id="menu-status" style="color:white;">Bar 1, Beat 1</div>
+            <button class="btn-close-menu" onclick="toggleNoteMenu()"><i class="fa-solid fa-circle-chevron-down"></i></button>
+        </div>
+        <div class="keyboard-grid">
             <div class="voice-col">
                 <button class="btn-v selected" id="v-s" onclick="setVoice('s')">S</button>
                 <button class="btn-v" id="v-a" onclick="setVoice('a')">A</button>
                 <button class="btn-v" id="v-t" onclick="setVoice('t')">T</button>
                 <button class="btn-v" id="v-b" onclick="setVoice('b')">B</button>
             </div>
-            
             <div class="note-area">
                 <div class="note-row">
                     <button class="btn-n" onclick="playToneNote('c'); setNote('c')" id="n-c">C</button>
@@ -156,660 +277,578 @@
                     <button class="btn-n" onclick="playToneNote('a'); setNote('a')" id="n-a">A</button>
                     <button class="btn-n" onclick="playToneNote('b'); setNote('b')" id="n-b">B</button>
                 </div>
-                
                 <div class="tools-row">
-                    <button class="btn-tool acc-text" onclick="playSfx('click'); setAcc('#')" style="color:#FACC15">♯</button>
-                    <button class="btn-tool acc-text" onclick="playSfx('click'); setAcc('n')">♮</button>
-                    <button class="btn-tool acc-text" onclick="playSfx('click'); setAcc('b')" style="color:#C084FC">♭</button>
-                    <button class="btn-tool" onclick="playSfx('click'); shiftOctave(1)">Oct+</button>
-                    <button class="btn-tool" onclick="playSfx('click'); shiftOctave(-1)">Oct-</button>
-                    <button class="btn-tool inv-btn" id="btn-inv" onclick="playSfx('click'); autoInvert()">Inv</button>
-                    <button class="btn-tool undo-btn" onclick="playSfx('click'); undo()"><i class="fa-solid fa-rotate-left"></i></button>
-                    <button class="btn-tool play-btn" id="btn-play" onclick="togglePlay()"><i class="fa-solid fa-play" id="btn-play-icon"></i></button>
+                    <button class="btn-tool acc-text" onclick="setAcc('#')">♯</button>
+                    <button class="btn-tool acc-text" onclick="setAcc('n')">♮</button>
+                    <button class="btn-tool acc-text" onclick="setAcc('b')">♭</button>
+                    <button class="btn-tool" onclick="autoInvert()" style="font-size:0.8rem;">Inv</button>
+                    <button class="btn-tool" onclick="shiftOctave(1)" style="font-size:0.8rem;">Oct+</button>
+                    <button class="btn-tool" onclick="shiftOctave(-1)" style="font-size:0.8rem;">Oct-</button>
+                    <button class="btn-tool btn-undo" onclick="undo()" style="grid-column: span 2;"><i class="fa-solid fa-rotate-left"></i> Undo</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="tour-backdrop"></div>
-    <div id="tour-tooltip">
-        <h3 id="tour-title" style="margin:0 0 8px 0; color:#38BDF8; font-size:1.2rem;"></h3>
-        <p id="tour-desc" style="margin:0; font-size:0.95rem; line-height:1.6; color:#CBD5E1;"></p>
-        <div class="tour-controls">
-            <button class="btn-tour btn-skip" onclick="playSfx('click'); endTour()">ข้าม</button>
-            <button class="btn-tour btn-next" onclick="playSfx('click'); nextStep()">ถัดไป <i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-    </div>
-    <button class="btn-start-tour" onclick="playSfx('click'); startTour()"><i class="fa-solid fa-hand-point-up"></i></button>
-
 <script>
-    // --- AUDIO & SCROLL LOGIC ---
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const clickSfx = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3");
-    clickSfx.volume = 0.5;
-    window.playSfx = (type) => { if(type==='click') { clickSfx.currentTime = 0; clickSfx.play().catch(()=>{}); } };
-
-    const NOTE_FREQS = { 'c': 261.63, 'c#': 277.18, 'db': 277.18, 'd': 293.66, 'd#': 311.13, 'eb': 311.13, 'e': 329.63, 'f': 349.23, 'f#': 369.99, 'gb': 369.99, 'g': 392.00, 'g#': 415.30, 'ab': 415.30, 'a': 440.00, 'a#': 466.16, 'bb': 466.16, 'b': 493.88 };
-
-    window.playToneNote = (noteName) => {
-        try { if(audioCtx.state === 'suspended') audioCtx.resume(); const n = scoreData[curM].beats[curB][curV]; let freq = NOTE_FREQS[noteName.toLowerCase()] || 440; freq = freq * Math.pow(2, n.o - 4); playSound(freq); } catch(e) {}
+    let appSettings = { showFig: true, showErr: true, showRom: true };
+    let isExportingPDF = false; 
+    
+    window.toggleSettings = () => { document.getElementById('settings-modal').classList.toggle('show'); };
+    window.updateSettings = () => {
+        appSettings.showFig = document.getElementById('set-fig').checked;
+        appSettings.showErr = document.getElementById('set-err').checked;
+        appSettings.showRom = document.getElementById('set-rom').checked;
+        renderScore();
     };
 
-    let isPlayingSequence = false;
-    let activeOscillators = [];
-    let playbackTimeouts = [];
+   window.exportToPDF = () => {
+        playSfx('click');
+        if(isMenuOpen) toggleNoteMenu();
+        
+        const oldZoom = currentZoom;
+        const workspace = document.getElementById('workspace');
+        
+        workspace.scrollLeft = 0;
+        workspace.scrollTop = 0;
+        window.scrollTo(0,0);
 
-    window.togglePlay = () => { if (isPlayingSequence) stopPlayback(); else playSequence(); };
+        currentZoom = 1;
+        applyZoom();
 
-    function stopPlayback() {
-        isPlayingSequence = false;
-        activeOscillators.forEach(osc => { try { osc.stop(); } catch(e){} });
-        activeOscillators = [];
-        playbackTimeouts.forEach(clearTimeout);
-        playbackTimeouts = [];
-        document.getElementById('btn-play-icon').className = "fa-solid fa-play";
-        document.getElementById('btn-play').classList.remove('playing');
-        renderUI();
-    }
-
-    function playSequence() {
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        isPlayingSequence = true;
-        document.getElementById('btn-play-icon').className = "fa-solid fa-stop";
-        document.getElementById('btn-play').classList.add('playing');
-        const tempo = 100; const beatDuration = 60/tempo; let totalBeats = 0;
-        scoreData.forEach((measure, mIdx) => {
-            measure.beats.forEach((beat, bIdx) => {
-                const startTime = audioCtx.currentTime + (totalBeats * beatDuration);
-                playBeatAtTime(beat, startTime, beatDuration);
-                const uiTimeout = setTimeout(() => { if(!isPlayingSequence) return; curM = mIdx; curB = bIdx; renderUI(); }, totalBeats * beatDuration * 1000);
-                playbackTimeouts.push(uiTimeout);
-                totalBeats++;
-            });
-        });
-        playbackTimeouts.push(setTimeout(() => { stopPlayback(); }, totalBeats * beatDuration * 1000));
-    }
-
-    // Auto Invert
-    window.autoInvert = () => {
-        saveState();
-        const beat = scoreData[curM].beats[curB];
-        const map = {c:0, d:2, e:4, f:5, g:7, a:9, b:11};
-        const getVal = (n) => (n.o * 12) + map[n.n] + (n.acc==='#'?1:n.acc==='b'?-1:0);
-        let notes = [{...beat.b}, {...beat.t}, {...beat.a}, {...beat.s}];
-        notes.sort((a,b) => getVal(a) - getVal(b));
-        notes[0].o += 1; // Move bass up
-        notes.sort((a,b) => getVal(a) - getVal(b));
-        if (getVal(notes[0]) > (4*12)) notes.forEach(n => n.o -= 1); // Reset if too high
-        beat.b = notes[0]; beat.t = notes[1]; beat.a = notes[2]; beat.s = notes[3];
-        renderScore(); renderUI(); playChord();
-    };
-
-    window.playChord = () => { if(audioCtx.state === 'suspended') audioCtx.resume(); const beat = scoreData[curM].beats[curB]; playBeatAtTime(beat, audioCtx.currentTime, 0.8); };
-
-    function playBeatAtTime(beat, time, duration) {
-        ['s', 'a', 't', 'b'].forEach(v => {
-            const n = beat[v];
-            if(n) {
-                let freq = NOTE_FREQS[n.n.toLowerCase()] || 440;
-                freq = freq * Math.pow(2, n.o - 4);
-                if(n.acc === '#') freq *= 1.05946; if(n.acc === 'b') freq /= 1.05946;
-                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-                osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(time); gain.gain.setValueAtTime(0.3, time); gain.gain.exponentialRampToValueAtTime(0.001, time + duration - 0.05); osc.stop(time + duration);
-                activeOscillators.push(osc); osc.onended = () => { const idx = activeOscillators.indexOf(osc); if(idx > -1) activeOscillators.splice(idx, 1); };
+        const element = document.getElementById('paper');
+        const editables = document.querySelectorAll('#sheet-header [contenteditable], #sheet-footer');
+        let hasHeaderContent = false;
+        
+        editables.forEach(el => {
+            if(el.innerText.trim() === '') {
+                el.setAttribute('data-hide-print', 'true');
+            } else if (el.id !== 'sheet-footer') {
+                hasHeaderContent = true;
             }
         });
-    }
 
-    function playSound(freq, vol=0.5) {
-        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.8); osc.stop(audioCtx.currentTime + 0.8);
-    }
+        const header = document.getElementById('sheet-header');
+        const oldHeaderPadding = header.style.padding;
+        if(!hasHeaderContent) {
+            header.style.padding = '20px 50px 0px 50px'; 
+        }
 
-    // --- MAIN LOGIC ---
-    let scoreData = Array(4).fill(null).map(() => ({ key: 'C', beats: Array(4).fill(null).map(() => ({ s: { n:'c', o:5, acc:'' }, a: { n:'g', o:4, acc:'' }, t: { n:'e', o:4, acc:'' }, b: { n:'c', o:3, acc:'' } })) }));
-    let curM = 0, curB = 0, curV = 's', errors = {}; let historyStack = []; const VF = Vex.Flow;
-    const KEY_DATA = { 'C': { root: 0, sharps: [] }, 'G': { root: 7, sharps: ['f'] }, 'D': { root: 2, sharps: ['f','c'] }, 'F': { root: 5, flats: ['b'] }, 'Bb': { root: 10, flats: ['b','e'] }, 'Am': { root: 9, sharps: [] }, 'Em': { root: 4, sharps: ['f'] } };
-    
-    // ** DRAG SCROLL FIX **
-    let isDown = false, startX, scrollLeft, isDragging = false;
-    window.onload = () => { 
-        renderUI(); renderScore(); 
-        const slider = document.getElementById('beat-list');
-        // Mouse Down
-        slider.addEventListener('mousedown', (e) => { 
-            isDown = true; 
-            slider.classList.add('active'); // CSS cursor grabbing
-            startX = e.pageX - slider.offsetLeft; 
-            scrollLeft = slider.scrollLeft; 
-            isDragging = false; 
-        });
-        // Mouse Leave
-        slider.addEventListener('mouseleave', () => { isDown = false; slider.classList.remove('active'); });
-        // Mouse Up
-        slider.addEventListener('mouseup', () => { isDown = false; slider.classList.remove('active'); setTimeout(() => isDragging = false, 50); });
-        // Mouse Move
-        slider.addEventListener('mousemove', (e) => { 
-            if(!isDown) return; 
-            e.preventDefault(); 
-            const x = e.pageX - slider.offsetLeft; 
-            const walk = (x - startX) * 2; 
-            slider.scrollLeft = scrollLeft - walk; 
-            if(Math.abs(walk) > 5) isDragging = true; 
-        });
+        isExportingPDF = true;
+        renderScore(); 
+
+        document.body.classList.add('pdf-exporting');
+        
+        setTimeout(() => {
+            const opt = {
+                margin: 0,
+                filename: 'Harmonix_Score.pdf',
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    scrollX: 0, 
+                    scrollY: 0, 
+                    x: 0, 
+                    y: 0,
+                    windowWidth: 800 
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                cleanupExport();
+            }).catch(err => { 
+                console.error("PDF Error", err); 
+                cleanupExport(); 
+            });
+
+            function cleanupExport() {
+                editables.forEach(el => el.removeAttribute('data-hide-print'));
+                header.style.padding = oldHeaderPadding;
+                document.body.classList.remove('pdf-exporting');
+                
+                isExportingPDF = false;
+                renderScore(); 
+                
+                currentZoom = oldZoom;
+                applyZoom();
+            }
+        }, 500); 
     };
 
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const clickSfx = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3");
+    window.playSfx = () => { clickSfx.currentTime = 0; clickSfx.play().catch(()=>{}); };
+    const NOTE_FREQS = { 'c': 261.63, 'c#': 277.18, 'db': 277.18, 'd': 293.66, 'd#': 311.13, 'eb': 311.13, 'e': 329.63, 'f': 349.23, 'f#': 369.99, 'gb': 369.99, 'g': 392.00, 'g#': 415.30, 'ab': 415.30, 'a': 440.00, 'a#': 466.16, 'bb': 466.16, 'b': 493.88 };
+    window.playToneNote = (noteName) => { try { if(audioCtx.state === 'suspended') audioCtx.resume(); const n = scoreData[curM].beats[curB][curV]; let freq = NOTE_FREQS[noteName.toLowerCase()] || 440; freq = freq * Math.pow(2, n.o - 4); playSound(freq); } catch(e) {} };
+    let isPlayingSequence = false; let activeOscillators = []; let playbackTimeouts = [];
+    window.togglePlay = () => { if (isPlayingSequence) stopPlayback(); else playSequence(); };
+    function stopPlayback() { isPlayingSequence = false; activeOscillators.forEach(osc => { try { osc.stop(); } catch(e){} }); activeOscillators = []; playbackTimeouts.forEach(clearTimeout); playbackTimeouts = []; document.getElementById('btn-play-icon').className = "fa-solid fa-play"; document.getElementById('btn-play').style.color = "var(--primary)"; }
+    function playSequence() { if(audioCtx.state === 'suspended') audioCtx.resume(); isPlayingSequence = true; document.getElementById('btn-play-icon').className = "fa-solid fa-stop"; document.getElementById('btn-play').style.color = "#EF4444"; const tempo = 100; const beatDuration = 60/tempo; let totalBeats = 0; scoreData.forEach((measure, mIdx) => { measure.beats.forEach((beat, bIdx) => { const startTime = audioCtx.currentTime + (totalBeats * beatDuration); playBeatAtTime(beat, startTime, beatDuration); playbackTimeouts.push(setTimeout(() => { if(!isPlayingSequence) return; curM = mIdx; curB = bIdx; renderScore(); }, totalBeats * beatDuration * 1000)); totalBeats++; }); }); playbackTimeouts.push(setTimeout(() => { stopPlayback(); }, totalBeats * beatDuration * 1000)); }
+    function playBeatAtTime(beat, time, duration) {
+    ['s', 'a', 't', 'b'].forEach(v => {
+        const n = beat[v];
+        if(n) {
+            let freq = NOTE_FREQS[n.n.toLowerCase()] || 440;
+            freq = freq * Math.pow(2, n.o - 4);
+            if(n.acc === '#') freq *= 1.05946;
+            if(n.acc === 'b') freq /= 1.05946;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'triangle'; 
+            osc.frequency.value = freq;
+
+            const overtone = audioCtx.createOscillator();
+            const overtoneGain = audioCtx.createGain();
+            overtone.type = 'sine';
+            overtone.frequency.value = freq * 2;
+
+            const attack = 0.05;
+            const release = duration * 1.5; 
+            
+            gain.gain.setValueAtTime(0, time);
+            gain.gain.linearRampToValueAtTime(0.2, time + attack); 
+            gain.gain.exponentialRampToValueAtTime(0.001, time + release);
+
+            overtoneGain.gain.setValueAtTime(0, time);
+            overtoneGain.gain.linearRampToValueAtTime(0.05, time + attack); 
+            overtoneGain.gain.exponentialRampToValueAtTime(0.001, time + release);
+
+            osc.connect(gain);
+            overtone.connect(overtoneGain);
+            gain.connect(audioCtx.destination);
+            overtoneGain.connect(audioCtx.destination);
+
+            osc.start(time);
+            overtone.start(time);
+            osc.stop(time + release);
+            overtone.stop(time + release);
+
+            activeOscillators.push(osc, overtone);
+        }
+    });
+}
+
+    function playSound(freq, vol=0.5) { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.8); osc.stop(audioCtx.currentTime + 0.8); }
+
+    function getDefaultBeat() { return { s: { n:'c', o:5, acc:'' }, a: { n:'g', o:4, acc:'' }, t: { n:'e', o:4, acc:'' }, b: { n:'c', o:3, acc:'' } }; }
+    let scoreData = Array(4).fill(null).map(() => ({ key: 'C', time: '4/4', beats: Array(4).fill(null).map(() => getDefaultBeat()) }));
+    let curM = 0, curB = 0, curV = 's';
+    let historyStack = []; const VF = Vex.Flow;  
+    const KEY_DATA = {
+        'C':  { root: 0,  sharps: [] },
+        'G':  { root: 7,  sharps: ['f'] },
+        'D':  { root: 2,  sharps: ['f','c'] },
+        'A':  { root: 9,  sharps: ['f','c','g'] },
+        'E':  { root: 4,  sharps: ['f','c','g','d'] },
+        'B':  { root: 11, sharps: ['f','c','g','d','a'] },
+        'F#': { root: 6,  sharps: ['f','c','g','d','a','e'] },
+        'C#': { root: 1,  sharps: ['f','c','g','d','a','e','b'] },
+        'F':  { root: 5,  flats: ['b'] },
+        'Bb': { root: 10, flats: ['b','e'] },
+        'Eb': { root: 3,  flats: ['b','e','a'] },
+        'Ab': { root: 8,  flats: ['b','e','a','d'] },
+        'Db': { root: 1,  flats: ['b','e','a','d','g'] },
+        'Gb': { root: 6,  flats: ['b','e','a','d','g','c'] },
+        'Cb': { root: 11, flats: ['b','e','a','d','g','c','f'] },
+        'Am':  { root: 9,  sharps: [] },
+        'Em':  { root: 4,  sharps: ['f'] },
+        'Bm':  { root: 11, sharps: ['f','c'] },
+        'F#m': { root: 6,  sharps: ['f','c','g'] },
+        'C#m': { root: 1,  sharps: ['f','c','g','d'] },
+        'G#m': { root: 8,  sharps: ['f','c','g','d','a'] },
+        'D#m': { root: 3,  sharps: ['f','c','g','d','a','e'] },
+        'A#m': { root: 10, sharps: ['f','c','g','d','a','e','b'] },
+        'Dm':  { root: 2,  flats: ['b'] },
+        'Gm':  { root: 7,  flats: ['b','e'] },
+        'Cm':  { root: 0,  flats: ['b','e','a'] },
+        'Fm':  { root: 5,  flats: ['b','e','a','d'] },
+        'Bbm': { root: 10, flats: ['b','e','a','d','g'] },
+        'Ebm': { root: 3,  flats: ['b','e','a','d','g','c'] },
+        'Abm': { root: 8,  flats: ['b','e','a','d','g','c','f'] }
+    };
+    
+    let currentZoom = window.innerWidth < 800 ? 0.45 : 0.8; 
+    const paperEl = document.getElementById('paper');
+    const paperWrapper = document.getElementById('paper-wrapper');
+    const workspace = document.getElementById('workspace');
+
+    function applyZoom() { 
+        paperEl.style.transform = `scale(${currentZoom})`; 
+        paperWrapper.style.width = `${800 * currentZoom + 80}px`; 
+        paperWrapper.style.height = `${paperEl.offsetHeight * currentZoom + 80}px`; 
+    }
+
+    let initialPinchDist = null, initialZoom = 1;
+    workspace.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { initialPinchDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); initialZoom = currentZoom; } }, { passive: false });
+    workspace.addEventListener('touchmove', (e) => { if (e.touches.length === 2 && initialPinchDist) { e.preventDefault(); const currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); const scale = currentDist / initialPinchDist; currentZoom = Math.min(2.5, Math.max(0.2, initialZoom * scale)); applyZoom(); } }, { passive: false });
+    workspace.addEventListener('touchend', (e) => { if (e.touches.length < 2) initialPinchDist = null; });
+    
+    let isDragging = false;
+    let startX, startY, scrollLeft, scrollTop;
+
+    workspace.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.hitbox') || e.target.closest('[contenteditable]') || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
+        isDragging = true;
+        workspace.style.cursor = 'grabbing'; 
+        startX = e.pageX - workspace.offsetLeft;
+        startY = e.pageY - workspace.offsetTop;
+        scrollLeft = workspace.scrollLeft;
+        scrollTop = workspace.scrollTop;
+    });
+
+    workspace.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - workspace.offsetLeft;
+        const y = e.pageY - workspace.offsetTop;
+        const walkX = (x - startX) * 1.5; 
+        const walkY = (y - startY) * 1.5; 
+        workspace.scrollLeft = scrollLeft - walkX;
+        workspace.scrollTop = scrollTop - walkY;
+    });
+
+    window.addEventListener('mouseup', () => {
+        isDragging = false;
+        workspace.style.cursor = 'auto'; 
+    });
+
+    workspace.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault(); 
+            const zoomSpeed = 0.05; 
+            if (e.deltaY < 0) { currentZoom = Math.min(2.5, currentZoom + zoomSpeed); } 
+            else { currentZoom = Math.max(0.2, currentZoom - zoomSpeed); }
+            applyZoom();
+        }
+    }, { passive: false });
+
+    let isMenuOpen = false;
+    window.toggleNoteMenu = () => { isMenuOpen = !isMenuOpen; document.getElementById('note-menu').classList.toggle('open', isMenuOpen); if(isMenuOpen && audioCtx.state === 'suspended') audioCtx.resume(); };
+    window.selectBeat = (m, b) => { curM = m; curB = b; renderScore(); updateMenuUI(); }; 
+
+    document.addEventListener('keydown', (e) => {
+        if (e.target.isContentEditable || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        const key = e.key.toLowerCase();
+        if (key === ' ' || e.code === 'Space') { e.preventDefault(); togglePlay(); }
+        else if ((e.ctrlKey || e.metaKey) && key === 'z') { e.preventDefault(); undo(); }
+        else if ((e.ctrlKey || e.metaKey) && key === 's') { e.preventDefault(); exportToPDF(); }
+        else if (key === '1') setVoice('s');
+        else if (key === '2') setVoice('a');
+        else if (key === '3') setVoice('t');
+        else if (key === '4') setVoice('b');
+        else if (['c','d','e','f','g','a','b'].includes(key)) { playToneNote(key); setNote(key); }
+        else if (key === 'o') { shiftOctave(-1); }
+        else if (key === 'p') { shiftOctave(1); }
+        else if (key === ']') { addMeasure(); }
+        else if (key === '[') { deleteMeasure(); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); if (curB < scoreData[curM].beats.length - 1) { selectBeat(curM, curB + 1); } else if (curM < scoreData.length - 1) { selectBeat(curM + 1, 0); } }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); if (curB > 0) { selectBeat(curM, curB - 1); } else if (curM > 0) { selectBeat(curM - 1, scoreData[curM-1].beats.length - 1); } }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); const voices = ['s', 'a', 't', 'b']; let idx = voices.indexOf(curV); if (idx > 0) setVoice(voices[idx - 1]); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); const voices = ['s', 'a', 't', 'b']; let idx = voices.indexOf(curV); if (idx < 3) setVoice(voices[idx + 1]); }
+        else if (key === '=' || key === '+') setAcc('#');
+        else if (key === '-') setAcc('b');
+        else if (key === 'n') setAcc('n');
+    });
+    
+    window.onload = () => { applyZoom(); updateMenuUI(); renderScore(); };
     function saveState() { if(historyStack.length > 20) historyStack.shift(); historyStack.push(JSON.stringify(scoreData)); }
-    window.undo = () => { playSfx('click'); if(historyStack.length){ scoreData = JSON.parse(historyStack.pop()); renderScore(); renderUI(); } };
-    window.changeKey = (k) => { saveState(); scoreData[curM].key = k; renderScore(); };
-    window.setVoice = (v) => { playSfx('click'); curV = v; renderUI(); renderScore(); };
-    window.setNote = (n) => { saveState(); scoreData[curM].beats[curB][curV].n = n; scoreData[curM].beats[curB][curV].acc = ''; renderScore(); renderUI(); };
+    window.undo = () => { playSfx(); if(historyStack.length){ scoreData = JSON.parse(historyStack.pop()); renderScore(); updateMenuUI(); } };
+    
+    window.changeKey = (k) => { 
+        saveState(); 
+        for (let i = curM; i < scoreData.length; i++) { scoreData[i].key = k; }
+        renderScore(); 
+    };
+    window.addMeasure = () => { playSfx(); saveState(); const prev = scoreData[scoreData.length - 1]; const numB = parseInt(prev.time.split('/')[0]); scoreData.push({ key: prev.key, time: prev.time, beats: Array(numB).fill(null).map(() => getDefaultBeat()) }); curM = scoreData.length - 1; curB = 0; renderScore(); updateMenuUI(); };
+    window.deleteMeasure = () => { if (scoreData.length <= 1) return; playSfx(); saveState(); scoreData.splice(curM, 1); if (curM >= scoreData.length) curM = scoreData.length - 1; curB = 0; renderScore(); updateMenuUI(); };
+    window.setVoice = (v) => { playSfx(); curV = v; updateMenuUI(); renderScore(); };
+    window.setNote = (n) => { saveState(); scoreData[curM].beats[curB][curV].n = n; scoreData[curM].beats[curB][curV].acc = ''; renderScore(); updateMenuUI(); };
     window.setAcc = (acc) => { saveState(); let c = scoreData[curM].beats[curB][curV].acc; scoreData[curM].beats[curB][curV].acc = (c===acc)?'':acc; renderScore(); };
     window.shiftOctave = (dir) => { saveState(); let v = scoreData[curM].beats[curB][curV].o + dir; if(v>=2&&v<=6) scoreData[curM].beats[curB][curV].o = v; renderScore(); };
-    
-    function renderScore() {
-        const div = document.getElementById("vexflow-out"); div.innerHTML = "";
-        const renderer = new VF.Renderer(div, VF.Renderer.Backends.SVG);
-        const mWidth = 380; const totalWidth = (scoreData.length * mWidth) + 50;
-        renderer.resize(totalWidth, 300);
-        const ctx = renderer.getContext(); ctx.scale(1, 1); ctx.setFillStyle("black"); ctx.setStrokeStyle("black");
-        let xPos = 10; errors = {}; const allAnalysis = [];
-        scoreData.forEach(m => m.beats.forEach(b => allAnalysis.push(analyzeHarmony(b, m.key))));
-        scoreData.forEach((measure, mIdx) => {
-            const sT = new VF.Stave(xPos, 20, mWidth); const sB = new VF.Stave(xPos, 130, mWidth);
-            if(mIdx === 0) { sT.addClef("treble").addTimeSignature("4/4").addKeySignature(measure.key); sB.addClef("bass").addTimeSignature("4/4").addKeySignature(measure.key); } else if (scoreData[mIdx-1].key !== measure.key) { sT.addKeySignature(measure.key); sB.addKeySignature(measure.key); }
-            sT.setContext(ctx).draw(); sB.setContext(ctx).draw();
-            const createNotes = (part, clef, stem) => measure.beats.map((b, bIdx) => {
-                const sn = new VF.StaveNote({ keys: [`${b[part].n}/${b[part].o}`], duration: "q", clef: clef, stem_direction: stem });
-                if(b[part].acc) sn.addModifier(new VF.Accidental(b[part].acc));
-                if(mIdx === curM && bIdx === curB) { if(part === curV) sn.setStyle({ fillStyle: "#0533EA", strokeStyle: "#0533EA" }); else sn.setStyle({ fillStyle: "#C74207", strokeStyle: "#C74207" }); } else { sn.setStyle({ fillStyle: "black", strokeStyle: "black" }); }
-                return sn;
-            });
-            const vS = new VF.Voice({num_beats:4, beat_value:4}).addTickables(createNotes('s','treble',1));
-            const vA = new VF.Voice({num_beats:4, beat_value:4}).addTickables(createNotes('a','treble',-1));
-            const vT = new VF.Voice({num_beats:4, beat_value:4}).addTickables(createNotes('t','bass',1));
-            const vB = new VF.Voice({num_beats:4, beat_value:4}).addTickables(createNotes('b','bass',-1));
-            new VF.Formatter().joinVoices([vS, vA]).joinVoices([vT, vB]).format([vS, vA, vT, vB], mWidth - 50);
-            vS.draw(ctx, sT); vA.draw(ctx, sT); vT.draw(ctx, sB); vB.draw(ctx, sB);
-            measure.beats.forEach((_, bIdx) => {
-                const res = allAnalysis[mIdx * 4 + bIdx];
-                const noteX = vB.getTickables()[bIdx].getAbsoluteX();
-                ctx.setFont("Noto Serif", 14, "bold").setFillStyle("black");
-                const romanWidth = ctx.measureText(res.roman).width; ctx.fillText(res.roman, noteX, 250); 
-                if(res.figures && res.figures.length > 0) {
-                    ctx.setFont("Sarabun", 11, "bold"); let startY = 245; if(res.figures.length === 2) startY = 240; if(res.figures.length === 3) startY = 235; const lineHeight = 14; const figX = noteX + romanWidth;
-                    res.figures.forEach((fig, i) => { let txt = fig.val + fig.acc.replace('n','♮').replace('#','♯').replace('b','♭'); ctx.fillText(txt, figX, startY + (i * lineHeight)); });
-                }
-            });
-            checkErrorsInMeasure(mIdx); xPos += mWidth;
-        });
-        const res = allAnalysis[curM*4 + curB]; document.getElementById('txt-chord').innerText = `${res.name} (${res.roman})`; updateCadenceUI(allAnalysis);
-        const activeErr = errors[curM*4 + curB]; const msgDiv = document.getElementById('ui-message');
-        if(activeErr) { msgDiv.className = 'status-err'; msgDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${activeErr}`; } else { msgDiv.className = 'status-ok'; msgDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> ถูกต้อง`; }
+    window.autoInvert = () => { saveState(); const beat = scoreData[curM].beats[curB]; const map = {c:0, d:2, e:4, f:5, g:7, a:9, b:11}; const getVal = (n) => (n.o * 12) + map[n.n] + (n.acc==='#'?1:n.acc==='b'?-1:0); let notes = [{...beat.b}, {...beat.t}, {...beat.a}, {...beat.s}]; notes.sort((a,b) => getVal(a) - getVal(b)); notes[0].o += 1; notes.sort((a,b) => getVal(a) - getVal(b)); if (getVal(notes[0]) > (4*12)) notes.forEach(n => n.o -= 1); beat.b = notes[0]; beat.t = notes[1]; beat.a = notes[2]; beat.s = notes[3]; renderScore(); playBeatAtTime(beat, audioCtx.currentTime, 0.8); };
+
+    function getCadenceText(cPre, cFin, bFin, keyName) {
+        const keyInfo = KEY_DATA[keyName] || KEY_DATA['C'];
+        const map = {c:0, d:2, e:4, f:5, g:7, a:9, b:11}; const getPC = (n) => { let val = map[n.n]; if(n.acc==='#') val++; if(n.acc==='b') val--; return (val+12)%12; };
+        let rFin = cFin.roman.toUpperCase(); let rPre = cPre.roman.toUpperCase();
+        let isPreV = rPre === "V" || cPre.roman.toLowerCase() === "vii°";
+        if (rFin === "I") { if (isPreV) { const sopPC = getPC(bFin.s); const isSopTonic = (sopPC === keyInfo.root); if (cFin.isRootPos && cPre.isRootPos && isSopTonic && rPre === "V") return "PAC"; else return "IAC"; } else if (rPre === "IV") return "PC"; } else if (rFin === "V") { if (rPre === "I" || rPre === "IV" || cPre.roman.toLowerCase() === "ii" || cPre.roman.toLowerCase() === "vi") return "HC"; } else if (isPreV && cFin.roman.toLowerCase() === "vi") return "DC";
+        return null;
     }
-    
-    function updateCadenceUI(all) { const cPre = all[14]; const cFin = all[15]; const uiCad = document.getElementById('ui-cadence'); let cadText = ""; if (cFin && cPre) { if (cFin.roman.toLowerCase() === "i") { if (cPre.roman.toLowerCase() === "iv") cadText = "PC"; else if (cPre.roman.toLowerCase().startsWith("v")) cadText = (cFin.isRootPos && cPre.isRootPos) ? "PAC" : "IAC"; } else if (cFin.roman.toLowerCase().startsWith("v")) cadText = "HC"; else if (cPre.roman.toLowerCase().startsWith("v") && cFin.roman.toLowerCase() === "vi") cadText = "DC"; } if(cadText) { uiCad.innerText = cadText; uiCad.classList.remove('hidden'); uiCad.style.display = 'inline-block'; } else { uiCad.style.display = 'none'; } }
-    function checkErrorsInMeasure(mIdx) { for(let b=0; b<4; b++) { const idx = mIdx*4 + b; const beat = scoreData[mIdx].beats[b]; const getM = (n) => { const map={c:0,d:2,e:4,f:5,g:7,a:9,b:11}; return (n.o+1)*12 + map[n.n] + (n.acc=='#'?1:n.acc=='b'?-1:0); }; const s=getM(beat.s), a=getM(beat.a), t=getM(beat.t), bs=getM(beat.b); if(s<a || a<t || t<bs) errors[idx] = "เสียงไขว้กัน"; else if(s-a > 12 || a-t > 12) errors[idx] = "ห่างเกินคู่ 8"; if(idx > 0) { const pm = Math.floor((idx-1)/4), pb = (idx-1)%4; const prev = scoreData[pm].beats[pb]; const ps=getM(prev.s), pa=getM(prev.a), pt=getM(prev.t), pbs=getM(prev.b); const checkPar = (v1,v2, pv1,pv2, name) => { const int1 = (v1-v2)%12; const int2 = (pv1-pv2)%12; if(v1!==pv1 && ((int1===7 && int2===7) || (int1===0 && int2===0))) errors[idx] = `คู่ขนาน 5/8 (${name})`; }; checkPar(s,bs,ps,pbs,"S-B"); checkPar(s,a,ps,pa,"S-A"); checkPar(a,t,pa,pt,"A-T"); checkPar(t,bs,pt,pbs,"T-B"); } } }
-    function analyzeHarmony(beat, keyName) { const keyInfo = KEY_DATA[keyName] || KEY_DATA['C']; const map = {c:0, d:2, e:4, f:5, g:7, a:9, b:11}; const getPC = (n) => { let val = map[n.n]; if(n.acc === '#') val++; if(n.acc === 'b') val--; return (val + 12) % 12; }; const pcs = [getPC(beat.s), getPC(beat.a), getPC(beat.t), getPC(beat.b)]; const uniq = [...new Set(pcs)].sort((a,b)=>a-b); let detectedRoot = -1; let quality = "maj"; for (let r of uniq) { const intervals = uniq.map(u => (u - r + 12) % 12).sort((a,b)=>a-b); if (intervals.includes(0) && intervals.includes(4) && intervals.includes(7)) { detectedRoot = r; quality="maj"; break; } if (intervals.includes(0) && intervals.includes(3) && intervals.includes(7)) { detectedRoot = r; quality="min"; break; } if (intervals.includes(0) && intervals.includes(3) && intervals.includes(6)) { detectedRoot = r; quality="dim"; break; } } if (detectedRoot === -1) detectedRoot = pcs[3]; const degree = (detectedRoot - keyInfo.root + 12) % 12; const romans = { 0: "I", 2: "ii", 4: "iii", 5: "IV", 7: "V", 9: "vi", 11: "vii°" }; let roman = romans[degree] || "?"; if (quality === "min" || quality === "dim") roman = roman.toLowerCase(); if (quality === "maj") roman = roman.toUpperCase(); if (quality === "dim" && !roman.includes("°")) roman += "°"; const bassVal = map[beat.b.n]; const diatonicMap = {c:0, d:1, e:2, f:3, g:4, a:5, b:6}; let figures = []; [beat.t, beat.a, beat.s].forEach(v => { const vDia = diatonicMap[v.n]; const bDia = diatonicMap[beat.b.n]; let interval = (vDia - bDia + 7) % 7 + 1; let acc = v.acc || ""; let show = false; if (acc) show = true; if (interval === 4 || interval === 2 || interval === 6 || interval === 7 || interval === 9) show = true; if (show && interval !== 1 && interval !== 8) { figures.push({val:interval, acc:acc}); } }); figures.sort((a,b) => b.val - a.val); figures = figures.filter((f, index, self) => index === self.findIndex((t) => (t.val === f.val && t.acc === f.acc)) ); let figStrs = figures.map(f => f.val); let isRootPos = true; if (figStrs.includes(6) || figStrs.includes(4)) isRootPos = false; const noteNames = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"]; let cName = noteNames[detectedRoot] + (quality==="min"?"m":quality==="dim"?"dim":""); return { name: cName, roman: roman, figures: figures, isRootPos: isRootPos }; }
-    
-    function renderUI() { 
-        const list = document.getElementById('beat-list'); list.innerHTML = ''; 
-        for(let i=0; i<16; i++) { 
-            const m = Math.floor(i/4), b = i%4; 
-            const div = document.createElement('div'); 
-            div.className = `beat-box ${m===curM && b===curB ? 'active' : ''} ${errors[i] ? 'error' : ''}`; 
-            div.innerHTML = `<span>Bar${m+1}</span>${b+1}`; 
-            // Fix: ถ้าลากอยู่ (isDragging=true) จะไม่กดเลือก
-            div.onclick = () => { 
-                if(isDragging) return; 
-                playSfx('click'); curM = m; curB = b; renderScore(); renderUI(); 
-            }; 
-            list.appendChild(div); 
-        } 
+
+    function renderScore() {
+        const outDiv = document.getElementById("vexflow-out"); 
+        outDiv.innerHTML = ""; 
+        
+        const SCALE = 0.72; 
+        const paperW = 800; 
+        const marginX = 50; 
+        
+        const physicalUsableW = paperW - (marginX * 2); 
+        const logicalUsableW = physicalUsableW / SCALE; 
+        
+        const startX = 35; 
+        const targetRowWidth = logicalUsableW - startX - 20; 
+        
+        const rowHeight = 260; 
+        const staffGap = 90; 
+        
+        let layout = []; let curRow = [];
+        scoreData.forEach((measure, mIdx) => {
+            let mWidth = measure.beats.length * 60; 
+            
+            const isKeyC = mIdx === 0 || scoreData[mIdx-1].key !== measure.key;
+            const isTimeC = mIdx === 0 || scoreData[mIdx-1].time !== measure.time;
+            
+            const keyInfo = KEY_DATA[measure.key] || { sharps: [] };
+            const accCount = (keyInfo.sharps || keyInfo.flats || []).length;
+            const keySigWidth = accCount > 0 ? (accCount * 18 + 15) : 15; 
+
+            if (mIdx === 0) { 
+                mWidth += 40 + 30 + keySigWidth; 
+            } else { 
+                if (isKeyC) mWidth += keySigWidth; 
+                if (isTimeC) mWidth += 35; 
+            }
+            
+            let inlineAcc = 0;
+            measure.beats.forEach(b => { if(b.s.acc) inlineAcc++; if(b.a.acc) inlineAcc++; if(b.t.acc) inlineAcc++; if(b.b.acc) inlineAcc++; });
+            mWidth += (inlineAcc * 12); 
+
+            curRow.push({ idx: mIdx, measure: measure, baseWidth: mWidth, isKeyC: isKeyC, isTimeC: isTimeC });
+            
+            if (curRow.length === 4) { layout.push(curRow); curRow = []; }
+        });
+        if (curRow.length > 0) layout.push(curRow); 
+
+        let allAn = []; let allBeats = [];
+        scoreData.forEach((m) => { m.beats.forEach((b) => { allAn.push(analyzeHarmony(b, m.key)); allBeats.push(b); });});
+        let systemErrors = checkAllErrors(); 
+        let finalCadence = null;
+        if (allAn.length > 1) {
+            const lastIdx = allAn.length - 1;
+            finalCadence = getCadenceText(allAn[lastIdx - 1], allAn[lastIdx], allBeats[lastIdx], scoreData[scoreData.length - 1].key);
+        }
+
+        layout.forEach((row) => {
+            let totalBaseW = row.reduce((sum, m) => sum + m.baseWidth, 0);
+            let stretchRatio = (row !== layout[layout.length-1] || row.length === 4) ? targetRowWidth / totalBaseW : 1.1;
+
+            const rowWrap = document.createElement('div');
+            rowWrap.className = 'system-row';
+            rowWrap.style.height = `${rowHeight * SCALE}px`;
+            
+            const scaleWrap = document.createElement('div');
+            scaleWrap.style.transform = `scale(${SCALE})`;
+            scaleWrap.style.transformOrigin = 'top left';
+            scaleWrap.style.width = `${logicalUsableW}px`;
+            scaleWrap.style.height = `${rowHeight}px`;
+            scaleWrap.style.position = 'absolute';
+            scaleWrap.style.left = `${marginX}px`;
+
+            rowWrap.appendChild(scaleWrap);
+            outDiv.appendChild(rowWrap);
+
+            const renderer = new VF.Renderer(scaleWrap, VF.Renderer.Backends.SVG);
+            renderer.resize(logicalUsableW, rowHeight);
+            const ctx = renderer.getContext();
+            
+            let xPos = startX; 
+            let yPos = 10; 
+
+            row.forEach(mData => {
+                const mIdx = mData.idx; const measure = mData.measure; 
+                const mWidth = mData.baseWidth * stretchRatio;
+                
+                const sT = new VF.Stave(xPos, yPos, mWidth); 
+                const sB = new VF.Stave(xPos, yPos + staffGap, mWidth); 
+                
+                if (mIdx === 0) { sT.addClef("treble"); sB.addClef("bass"); }
+                if (mData.isKeyC) { sT.addKeySignature(measure.key); sB.addKeySignature(measure.key); }
+                if (mData.isTimeC) { sT.addTimeSignature(measure.time); sB.addTimeSignature(measure.time); }
+                
+                sT.setContext(ctx).draw(); sB.setContext(ctx).draw();
+
+                if (row.indexOf(mData) === 0) {
+                    const connector = new VF.StaveConnector(sT, sB);
+                    connector.setType(VF.StaveConnector.type.BRACE);
+                    connector.setContext(ctx).draw();
+                    const line = new VF.StaveConnector(sT, sB);
+                    line.setType(VF.StaveConnector.type.SINGLE_LEFT);
+                    line.setContext(ctx).draw();
+                }
+
+                if (mIdx % 4 === 0 || mIdx === 0) {
+                    ctx.setFont("Sarabun", 24, "bold").setFillStyle("#475569");
+                    ctx.fillText(mIdx + 1, xPos, yPos - 15);
+                }
+
+                const createNotes = (part, clef, stem) => measure.beats.map((b, bIdx) => {
+                    const sn = new VF.StaveNote({ keys: [`${b[part].n}/${b[part].o}`], duration: "q", clef: clef, stem_direction: stem });
+                    if(b[part].acc) sn.addModifier(new VF.Accidental(b[part].acc));
+                    
+                    const flatIdx = getFlatIdx(mIdx, bIdx);
+                    const hasErr = appSettings.showErr && systemErrors[flatIdx] && systemErrors[flatIdx].length > 0;
+
+                    if (!isExportingPDF) {
+                        if (mIdx === curM && bIdx === curB) { 
+                            if (part === curV) sn.setStyle({ fillStyle: "#8B5CF6", strokeStyle: "#8B5CF6" }); 
+                            else if (hasErr) sn.setStyle({ fillStyle: "#F43F5E", strokeStyle: "#F43F5E" }); 
+                            else sn.setStyle({ fillStyle: "#F59E0B", strokeStyle: "#F59E0B" }); 
+                        } else if (hasErr) {
+                            sn.setStyle({ fillStyle: "#F43F5E", strokeStyle: "#F43F5E" }); 
+                        } else {
+                            sn.setStyle({ fillStyle: "#000000", strokeStyle: "#000000" });
+                        }
+                    } else {
+                        sn.setStyle({ fillStyle: "#000000", strokeStyle: "#000000" }); 
+                    }
+                    return sn;
+                });
+                
+                const numB = measure.beats.length;
+                const vS = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('s','treble',1));
+                const vA = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('a','treble',-1));
+                const vT = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('t','bass',1));
+                const vB = new VF.Voice({num_beats: numB, beat_value: 4}).addTickables(createNotes('b','bass',-1));
+                
+                const noteStartX = sT.getNoteStartX();
+                const formatWidth = Math.max(50, mWidth - (noteStartX - xPos) - 15); 
+
+                new VF.Formatter().joinVoices([vS, vA]).joinVoices([vT, vB]).format([vS, vA, vT, vB], formatWidth);
+                vS.draw(ctx, sT); vA.draw(ctx, sT); vT.draw(ctx, sB); vB.draw(ctx, sB);
+
+                measure.beats.forEach((_, bIdx) => {
+                    const flatIdx = getFlatIdx(mIdx, bIdx);
+                    const res = allAn[flatIdx];
+                    const noteX = vB.getTickables()[bIdx].getAbsoluteX();
+                    
+                    let nextNoteX = (bIdx < numB - 1) ? vB.getTickables()[bIdx+1].getAbsoluteX() : xPos + mWidth;
+                    let hitW = nextNoteX - noteX;
+                    
+                    if (!isExportingPDF) {
+                        const hb = document.createElement('div');
+                        hb.className = `hitbox ${mIdx===curM && bIdx===curB ? 'active' : ''}`;
+                        hb.style.left = `${noteX - 15}px`; hb.style.top = `${yPos}px`;
+                        hb.style.width = `${Math.max(30, hitW)}px`; 
+                        hb.style.height = `${staffGap + 70}px`;
+                        hb.onclick = () => selectBeat(mIdx, bIdx);
+                        scaleWrap.appendChild(hb); 
+                    }
+
+                    const textY = yPos + staffGap + 120; 
+                    
+                    if (appSettings.showRom) {
+                        ctx.setFont("Noto Serif", 16, "bold").setFillStyle("#111827"); 
+                        ctx.fillText(res.roman, noteX - 5, textY);
+                    }
+
+                    if (appSettings.showFig && res.figures && res.figures.length > 0) {
+                        ctx.setFont("Sarabun", 14, "bold").setFillStyle("#475569"); 
+                        let startY = textY; if(res.figures.length === 2) startY -= 5;
+                        const rW = ctx.measureText(res.roman).width;
+                        res.figures.forEach((fig, i) => { 
+                            let txt = fig.val + fig.acc.replace('n','♮').replace('#','♯').replace('b','♭'); 
+                            ctx.fillText(txt, noteX + rW + 2, startY + (i * 15)); 
+                        });
+                    }
+                });
+                xPos += mWidth;
+            });
+        });
+
+        const requiredHeight = 150 + (layout.length * (rowHeight * SCALE + 25)) + 50; 
+
+        paperEl.style.minHeight = "1131px"; 
+        if (requiredHeight > 1131) {
+            paperEl.style.height = requiredHeight + "px";
+        } else {
+            paperEl.style.height = "1131px";
+        }
+        applyZoom(); 
+
+        document.getElementById('key-select').value = scoreData[curM] ? scoreData[curM].key : 'C';
+        
+        if (curM !== -1) {
+            const currentFlatIdx = getFlatIdx(curM, curB);
+            const curRes = allAn[currentFlatIdx];
+            document.getElementById('txt-chord').innerText = `${curRes.name} (${curRes.roman})`;
+            
+            const uiCad = document.getElementById('ui-cadence');
+            if (finalCadence) {
+                uiCad.innerText = finalCadence; 
+                uiCad.style.display = 'inline-block';
+            } else {
+                uiCad.style.display = 'none';
+            }
+
+            const msgDiv = document.getElementById('ui-message');
+            if (appSettings.showErr && systemErrors[currentFlatIdx] && systemErrors[currentFlatIdx].length > 0) {
+                msgDiv.className = 'status-err';
+                msgDiv.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${systemErrors[currentFlatIdx].join(', ')}`;
+            } else {
+                msgDiv.className = 'status-ok';
+                msgDiv.innerHTML = `<i class="fa-solid fa-circle-check"></i> ถูกต้อง`;
+            }
+        }
+    }
+
+    function getFlatIdx(mI, bI) { let count = 0; for(let i=0; i<mI; i++) count += scoreData[i].beats.length; return count + bI; }
+
+    function updateMenuUI() {
+        if (curM === -1) return;
+        document.getElementById('menu-status').innerText = `Bar ${curM + 1}, Beat ${curB + 1}`;
         document.querySelectorAll('.btn-v').forEach(b => b.classList.toggle('selected', b.id === `v-${curV}`)); 
         document.querySelectorAll('.btn-n').forEach(b => b.classList.toggle('active', b.id === `n-${scoreData[curM].beats[curB][curV].n}`)); 
     }
 
-    // --- Tour Logic ---
-    const steps = [
-        { el: '#key-select', title: '1. เลือกคีย์เพลง', desc: 'เริ่มจากตรงนี้! กดเพื่อเปลี่ยนคีย์ (เช่น C, G, Am) ระบบจะเปลี่ยน Key Signature ให้เอง' },
-        { el: '#beat-list', title: '2. เลือกห้องเพลง', desc: 'แถบนี้ใช้เลือกห้อง (Bar) ที่ต้องการแก้ไข สามารถใช้เมาส์ลากซ้าย-ขวาเพื่อเลื่อนดูได้' },
-        { el: '.voice-col', title: '3. เลือกไลน์เสียง', desc: 'เลือกเสียงที่ต้องการเขียน S(สูงหญิง) A(ต่ำหญิง) T(สูงชาย) B(ต่ำชาย)' },
-        { el: '.note-area', title: '4. ใส่โน้ตดนตรี', desc: 'กดปุ่ม C-B เพื่อวางโน้ต ใช้เครื่องมือด้านล่างเพื่อติด #/b หรือเปลี่ยน Octave' },
-        { el: '#warning-bar', title: '5. ตัวช่วยวิเคราะห์', desc: 'ระบบจะบอกชื่อคอร์ดตรงนี้ และถ้าตัวหนังสือแดง แสดงว่าผิดกฎ Harmony' },
-        { el: '#btn-inv', title: '6. พลิกคอร์ดอัตโนมัติ', desc: 'กดปุ่มนี้เพื่อเปลี่ยน Inversion ของคอร์ด (Root -> 1st -> 2nd) ให้ทันที!' },
-        { el: '#btn-play', title: '7. ฟังเสียง', desc: 'กด Play เพื่อฟังเสียงประสาน หรือกด Stop เพื่อหยุด' },
-        { el: '.undo-btn', title: '8. ย้อนกลับ', desc: 'ถ้าทำผิด กดปุ่มนี้เพื่อย้อนกลับการแก้ไขล่าสุด' }
-    ];
-    let curStep = 0; const tooltip = document.getElementById('tour-tooltip'); const backdrop = document.getElementById('tour-backdrop');
-    function startTour() { curStep = 0; backdrop.classList.add('active'); tooltip.style.display = 'block'; showStep(); }
-    function endTour() { backdrop.classList.remove('active'); tooltip.style.display = 'none'; document.querySelectorAll('.tour-focus').forEach(el => el.classList.remove('tour-focus')); document.querySelector('.btn-start-tour').scrollIntoView({behavior: "smooth", block: "center"}); }
-    function nextStep() { const prevEl = document.querySelector(steps[curStep].el); if(prevEl) prevEl.classList.remove('tour-focus'); curStep++; if (curStep >= steps.length) { endTour(); } else { showStep(); } }
-    function showStep() { const step = steps[curStep]; const target = document.querySelector(step.el); if (!target) { nextStep(); return; } document.getElementById('tour-title').innerText = step.title; document.getElementById('tour-desc').innerText = step.desc; target.classList.add('tour-focus'); target.scrollIntoView({behavior: "smooth", block: "center"}); const rect = target.getBoundingClientRect(); const tipRect = tooltip.getBoundingClientRect(); let top = rect.top - tipRect.height - 20; let left = rect.left + (rect.width/2) - (tipRect.width/2); if(top < 20) { top = rect.bottom + 20; tooltip.className = "bottom"; } else { tooltip.className = "top"; } if(left < 10) left = 10; if(left + tipRect.width > window.innerWidth) left = window.innerWidth - tipRect.width - 10; tooltip.style.top = top + 'px'; tooltip.style.left = left + 'px'; document.querySelector('.btn-next').innerHTML = (curStep === steps.length - 1) ? 'เสร็จสิ้น <i class="fa-solid fa-check"></i>' : 'ถัดไป <i class="fa-solid fa-chevron-right"></i>'; }
-</script>
-<div id="invite-toast" style="position:fixed; top:20px; right:20px; background:#1E293B; color:white; padding:15px; border-radius:12px; border-left:4px solid #FACC15; display:none; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.5s;">
-    <div style="font-weight:bold; margin-bottom:5px;">คำเชิญเล่นเกม! 🎮</div>
-    <div id="inv-msg" style="font-size:0.9rem; color:#94A3B8;">User ชวนคุณเล่น</div>
-    <div style="margin-top:10px; display:flex; gap:10px;">
-        <button onclick="acceptInvite()" style="flex:1; background:#38BDF8; border:none; border-radius:6px; padding:6px; color:#0F172A; font-weight:bold; cursor:pointer;">เข้าร่วม</button>
-        <button onclick="closeInvite()" style="flex:1; background:transparent; border:1px solid #475569; border-radius:6px; padding:6px; color:#94A3B8; cursor:pointer;">ไม่สน</button>
-    </div>
-</div>
-
-<style> @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } } </style>
-
-<script type="module">
-    import { getFirestore, collection, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    
-    const db = getFirestore();
-    const auth = getAuth();
-    let currentInvite = null;
-    let autoCloseTimer = null;
-
-    onAuthStateChanged(auth, (user) => {
-        if(user) {
-            onSnapshot(collection(db, `users/${user.uid}/notifications`), (snap) => {
-                snap.docChanges().forEach(change => {
-                    if (change.type === "added") {
-                        const data = change.doc.data();
-                        if(data.type === 'invite') {
-                            currentInvite = { id: change.doc.id, ...data };
-                            showInvite(data);
-                        }
-                    }
-                });
-            });
-        }
-    });
-
-    function showInvite(data) {
-        const toast = document.getElementById('invite-toast');
-        document.getElementById('inv-msg').innerText = `${data.fromName} ชวนคุณเล่นเกม!`;
-        toast.style.display = 'block';
-        
-        // เล่นเสียงเตือน (ถ้ามีไฟล์เสียง)
-        try { new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3").play().catch(()=>{}); } catch(e){}
-
-        // **ตั้งเวลา 5 วินาที แล้วปิดเอง**
-        if(autoCloseTimer) clearTimeout(autoCloseTimer);
-        autoCloseTimer = setTimeout(() => {
-            closeInvite();
-        }, 5000); 
-    }
-
-    window.closeInvite = () => {
-        const toast = document.getElementById('invite-toast');
-        toast.style.display = 'none';
-        // ลบ Invite ออกจาก DB ด้วยเพื่อไม่ให้ค้าง
-        if(currentInvite && auth.currentUser) {
-             deleteDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${currentInvite.id}`)).catch(()=>{});
-        }
-    };
-
-    // แก้ไข: ฟังก์ชันรับคำเชิญ ให้เช็คประเภทเกม
-    window.acceptInvite = async () => {
-        if(currentInvite) {
-            // ลบการแจ้งเตือน
-            await deleteDoc(doc(db, `users/${auth.currentUser.uid}/notifications/${currentInvite.id}`)).catch(()=>{});
+    function checkAllErrors() { 
+        let errs = {}; 
+        scoreData.forEach((measure, mIdx) => { measure.beats.forEach((beat, bIdx) => {
+            const flatIdx = getFlatIdx(mIdx, bIdx);
+            const getM = (n) => { const map={c:0,d:2,e:4,f:5,g:7,a:9,b:11}; return (n.o+1)*12 + map[n.n] + (n.acc=='#'?1:n.acc=='b'?-1:0); }; 
+            const s=getM(beat.s), a=getM(beat.a), t=getM(beat.t), bs=getM(beat.b); 
             
-            // เช็คว่าเพื่อนชวนเล่นเกมอะไร?
-            if (currentInvite.gameType === 'quest') {
-                // ถ้าเป็น Quest ไปหน้า quest.html
-                window.location.href = `quest.html?room=${currentInvite.roomId}`;
-            } else {
-                // ถ้าไม่ระบุ หรือเป็น Blitz ไปหน้า multi.html (เกมเดิม)
-                window.location.href = `multi.html?mode=join&room=${currentInvite.roomId}`; 
-            }
-        }
-    };
-</script>
-<div id="global-chat-overlay" style="display:none;">
-    <div id="gc-fab" onclick="handleFabClick()">
-        <i class="fa-solid fa-comments"></i>
-        <span id="gc-badge" style="display:none;">0</span>
-    </div>
-
-    <div id="gc-window">
-        <div class="gc-header">
-            <span><i class="fa-solid fa-earth-americas"></i> Live Chat</span>
-            <button onclick="toggleGlobalChat()" class="gc-close"><i class="fa-solid fa-chevron-down"></i></button>
-        </div>
-        <div id="gc-messages">
-            <div style="text-align:center; color:#64748B; font-size:0.8rem; margin-top:20px;">
-                ยินดีต้อนรับสู่ Harmonix Chat<br>คุยกับเพื่อนๆ ได้ทั่วทั้งเซิร์ฟเวอร์
-            </div>
-        </div>
-        <div class="gc-input-area">
-            <input type="text" id="gc-input" placeholder="พิมพ์ข้อความ..." onkeypress="handleChatEnter(event)">
-            <button onclick="sendGlobalMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-    </div>
-</div>
-
-<style>
-    /* Global Chat CSS */
-    #gc-fab {
-        position: fixed; 
-        /* ค่าเริ่มต้น (ถ้าไม่มีการบันทึกตำแหน่ง) */
-        bottom: 20px; right: 20px;
-        
-        width: 60px; height: 60px; border-radius: 50%;
-        background: #38BDF8; color: #0F172A; border: none;
-        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
-        font-size: 1.5rem; cursor: grab; z-index: 10000;
-        display: flex; align-items: center; justify-content: center;
-        transition: transform 0.1s, background 0.2s;
-        touch-action: none; /* ป้องกันการเลื่อนหน้าจอเวลาลากปุ่มบนมือถือ */
-        user-select: none;
-    }
-    #gc-fab:active { cursor: grabbing; transform: scale(0.95); }
-    #gc-fab:hover { background: #7DD3FC; }
-    
-    #gc-badge {
-        position: absolute; top: -5px; right: -5px;
-        background: #F43F5E; color: white;
-        font-size: 0.75rem; font-weight: bold;
-        padding: 2px 6px; border-radius: 10px;
-        border: 2px solid #0F172A; pointer-events: none;
-    }
-
-    #gc-window {
-        position: fixed; bottom: 90px; right: 20px;
-        width: 320px; height: 400px;
-        background: #1E293B; border: 1px solid #334155;
-        border-radius: 16px; display: none;
-        flex-direction: column; z-index: 10000;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        overflow: hidden; animation: slideUpChat 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes slideUpChat { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .gc-header {
-        padding: 12px 15px; background: #0F172A; border-bottom: 1px solid #334155;
-        color: #FACC15; font-weight: bold; font-family: 'Cinzel', serif;
-        display: flex; justify-content: space-between; align-items: center;
-        cursor: default;
-    }
-    .gc-close { background: none; border: none; color: #94A3B8; cursor: pointer; }
-    .gc-close:hover { color: white; }
-
-    #gc-messages {
-        flex: 1; overflow-y: auto; padding: 10px;
-        display: flex; flex-direction: column; gap: 8px;
-        background: #1E293B;
-    }
-    .msg-row { display: flex; gap: 8px; align-items: flex-start; animation: fadeInMsg 0.2s; }
-    @keyframes fadeInMsg { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .msg-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #475569; flex-shrink: 0; }
-    .msg-bubble {
-        background: #334155; color: #E2E8F0; padding: 6px 10px;
-        border-radius: 0 12px 12px 12px; font-size: 0.9rem;
-        max-width: 220px; word-wrap: break-word;
-    }
-    .msg-name { font-size: 0.7rem; color: #94A3B8; margin-bottom: 2px; }
-    
-    .msg-row.mine { flex-direction: row-reverse; }
-    .msg-row.mine .msg-bubble { background: #38BDF8; color: #0F172A; border-radius: 12px 0 12px 12px; }
-    .msg-row.mine .msg-avatar { display: none; }
-
-    .gc-input-area {
-        padding: 10px; background: #0F172A; border-top: 1px solid #334155;
-        display: flex; gap: 8px;
-    }
-    #gc-input {
-        flex: 1; background: #1E293B; border: 1px solid #334155;
-        color: white; padding: 8px 12px; border-radius: 20px; outline: none; font-family: 'Sarabun';
-    }
-    #gc-input:focus { border-color: #38BDF8; }
-    .gc-input-area button {
-        background: #FACC15; color: #422006; border: none;
-        width: 36px; height: 36px; border-radius: 50%;
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-</style>
-
-<script type="module">
-    import { getFirestore, doc, updateDoc, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const auth = getAuth();
-    const db = getFirestore();
-    let globalUser = null;
-    let isChatOpen = false;
-    let unreadCount = 0;
-    
-    // ตัวแปรสำหรับ Drag Drop
-    let isDragging = false;
-    let hasMoved = false;
-
-    // --- 1. SETUP & AUTH ---
-    onAuthStateChanged(auth, (user) => {
-        if(user) {
-            globalUser = user;
-            document.getElementById('global-chat-overlay').style.display = 'block';
+            if (!errs[flatIdx]) errs[flatIdx] = [];
+            if(s<a || a<t || t<bs) errs[flatIdx].push("Cross Voice"); 
+            else if(s-a > 12 || a-t > 12) errs[flatIdx].push("> 1 Octave"); 
             
-            // โหลดตำแหน่งปุ่มที่เคยเซฟไว้
-            loadFabPosition();
-            // เริ่มระบบ Drag
-            makeDraggable(document.getElementById("gc-fab"));
+            let prevBeat = null;
+            if (bIdx > 0) prevBeat = measure.beats[bIdx-1];
+            else if (mIdx > 0) prevBeat = scoreData[mIdx-1].beats[scoreData[mIdx-1].beats.length - 1];
             
-            startGlobalHeartbeat();
-            initGlobalChat();
-        } else {
-            document.getElementById('global-chat-overlay').style.display = 'none';
-        }
-    });
-
-    // --- 2. DRAG & DROP LOGIC ---
-    function makeDraggable(elmnt) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
-        elmnt.onmousedown = dragMouseDown;
-        elmnt.ontouchstart = dragMouseDown; // Support Mobile
-
-        function dragMouseDown(e) {
-            // e = e || window.event;
-            // e.preventDefault(); // อย่าเพิ่ง preventDefault ตรงนี้ เพื่อให้ยังคลิก input ได้ถ้ามี
-            
-            // Get initial cursor position
-            if(e.type === 'touchstart') {
-                pos3 = e.touches[0].clientX;
-                pos4 = e.touches[0].clientY;
-            } else {
-                pos3 = e.clientX;
-                pos4 = e.clientY;
+            if(prevBeat) { 
+                const ps=getM(prevBeat.s), pa=getM(prevBeat.a), pt=getM(prevBeat.t), pbs=getM(prevBeat.b); 
+                const checkPar = (v1,v2, pv1,pv2, name) => { const int1 = (v1-v2)%12; const int2 = (pv1-pv2)%12; if(v1!==pv1 && ((int1===7 && int2===7) || (int1===0 && int2===0))) errs[flatIdx].push(`ขนาน ${name}`); }; 
+                checkPar(s,bs,ps,pbs,"S-B"); checkPar(s,a,ps,pa,"S-A"); checkPar(a,t,pa,pt,"A-T"); checkPar(t,bs,pt,pbs,"T-B"); 
+            } 
+        });}); return errs;
+    }
+    
+    function analyzeHarmony(beat, keyName) { 
+        const keyInfo = KEY_DATA[keyName] || KEY_DATA['C']; 
+        const map = {c:0, d:2, e:4, f:5, g:7, a:9, b:11}; 
+        const getPC = (n) => { 
+            let val = map[n.n]; 
+            if (n.acc === '#') val++; 
+            else if (n.acc === 'b') val--; 
+            else if (n.acc === 'n') { }
+            else {
+                if (keyInfo.sharps && keyInfo.sharps.includes(n.n)) val++;
+                if (keyInfo.flats && keyInfo.flats.includes(n.n)) val--;
             }
-
-            hasMoved = false; // Reset move flag
-            
-            document.onmouseup = closeDragElement;
-            document.onmousemove = elementDrag;
-            document.ontouchend = closeDragElement;
-            document.ontouchmove = elementDrag;
-        }
-
-        function elementDrag(e) {
-            // e.preventDefault(); // ป้องกัน scroll หน้าจอขณะลากปุ่ม
-            if(e.type === 'touchmove') e.preventDefault();
-
-            // Calculate new cursor position
-            let clientX, clientY;
-            if(e.type === 'touchmove') {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-
-            pos1 = pos3 - clientX;
-            pos2 = pos4 - clientY;
-            pos3 = clientX;
-            pos4 = clientY;
-
-            // ตรวจสอบว่าขยับจริงไหม (กันมือสั่นเวลากดคลิกเฉยๆ)
-            if(Math.abs(pos1) > 0 || Math.abs(pos2) > 0) {
-                isDragging = true;
-                hasMoved = true;
-            }
-
-            // Set element new position
-            let newTop = (elmnt.offsetTop - pos2);
-            let newLeft = (elmnt.offsetLeft - pos1);
-            
-            // Boundary Check (กันปุ่มตกขอบจอ)
-            const winWidth = window.innerWidth;
-            const winHeight = window.innerHeight;
-            if(newTop < 0) newTop = 0;
-            if(newLeft < 0) newLeft = 0;
-            if(newTop + elmnt.offsetHeight > winHeight) newTop = winHeight - elmnt.offsetHeight;
-            if(newLeft + elmnt.offsetWidth > winWidth) newLeft = winWidth - elmnt.offsetWidth;
-
-            elmnt.style.top = newTop + "px";
-            elmnt.style.left = newLeft + "px";
-            elmnt.style.bottom = "auto"; // ยกเลิก bottom เดิม
-            elmnt.style.right = "auto";  // ยกเลิก right เดิม
-        }
-
-        function closeDragElement() {
-            // Stop moving
-            document.onmouseup = null;
-            document.onmousemove = null;
-            document.ontouchend = null;
-            document.ontouchmove = null;
-
-            if(hasMoved) {
-                // ถ้ามีการลากเกิดขึ้น ให้บันทึกตำแหน่งล่าสุดลง LocalStorage
-                saveFabPosition(elmnt.style.top, elmnt.style.left);
-                // ตั้ง Delay นิดนึงเพื่อให้ click handler รู้ว่านี่คือการลาก ไม่ใช่คลิก
-                setTimeout(() => { isDragging = false; }, 100); 
-            } else {
-                isDragging = false;
-            }
-        }
-    }
-
-    // ฟังก์ชันแยกคลิกธรรมดา vs ลาก
-    window.handleFabClick = () => {
-        if(!isDragging && !hasMoved) {
-            toggleGlobalChat();
-        }
-    };
-
-    function saveFabPosition(top, left) {
-        localStorage.setItem('chat_fab_pos', JSON.stringify({ top, left }));
-    }
-
-    function loadFabPosition() {
-        const saved = localStorage.getItem('chat_fab_pos');
-        if(saved) {
-            try {
-                const pos = JSON.parse(saved);
-                const fab = document.getElementById('gc-fab');
-                fab.style.top = pos.top;
-                fab.style.left = pos.left;
-                fab.style.bottom = 'auto';
-                fab.style.right = 'auto';
-            } catch(e) {}
-        }
-    }
-
-    // --- 3. HEARTBEAT ---
-    function startGlobalHeartbeat() {
-        updateStatus();
-        setInterval(updateStatus, 60000);
-    }
-    async function updateStatus() {
-        if(!globalUser) return;
-        try { await updateDoc(doc(db, "users", globalUser.uid), { lastSeen: Date.now() }); } catch(e){}
-    }
-
-    // --- 4. CHAT SYSTEM ---
-    window.toggleGlobalChat = () => {
-        const win = document.getElementById('gc-window');
-        // ปรับตำแหน่งหน้าต่าง Chat ให้สัมพันธ์กับปุ่ม (ถ้าอยู่ซ้าย หน้าต่างก็ควรชิดซ้าย)
-        const fab = document.getElementById('gc-fab');
-        const fabRect = fab.getBoundingClientRect();
-        
-        // Logic ง่ายๆ: ถ้าปุ่มอยู่ครึ่งขวาของจอ ให้หน้าต่างอยู่ขวา, ถ้าอยู่ซ้าย ให้หน้าต่างอยู่ซ้าย
-        if(fabRect.left > window.innerWidth / 2) {
-             win.style.right = '20px'; win.style.left = 'auto';
-        } else {
-             win.style.left = '20px'; win.style.right = 'auto';
-        }
-
-        isChatOpen = !isChatOpen;
-        if(isChatOpen) {
-            win.style.display = 'flex';
-            unreadCount = 0;
-            updateBadge();
-            scrollToBottom();
-            document.getElementById('gc-input').focus();
-        } else {
-            win.style.display = 'none';
-        }
-    };
-
-    function updateBadge() {
-        const b = document.getElementById('gc-badge');
-        b.style.display = unreadCount > 0 ? 'block' : 'none';
-        b.innerText = unreadCount;
-    }
-
-    function initGlobalChat() {
-        const q = query(collection(db, "global_chat"), orderBy("timestamp", "desc"), limit(30));
-        onSnapshot(q, (snapshot) => {
-            const msgs = [];
-            snapshot.forEach(doc => msgs.push({id: doc.id, ...doc.data()}));
-            msgs.reverse(); 
-            renderMessages(msgs);
-            if(!isChatOpen && snapshot.docChanges().length > 0) {
-                const lastMsg = msgs[msgs.length - 1];
-                if(lastMsg && lastMsg.uid !== globalUser.uid) {
-                    if(snapshot.docChanges().length === 1 && snapshot.docChanges()[0].type === 'added') {
-                         unreadCount++;
-                         updateBadge();
-                         playNotificationSound();
-                    }
-                }
-            }
-        });
-    }
-
-    function renderMessages(msgs) {
-        const container = document.getElementById('gc-messages');
-        container.innerHTML = '<div style="text-align:center; color:#64748B; font-size:0.8rem; margin-top:10px; margin-bottom:10px;">--- เริ่มต้นบทสนทนา ---</div>';
-        msgs.forEach(m => {
-            const isMine = m.uid === globalUser.uid;
-            const div = document.createElement('div');
-            div.className = `msg-row ${isMine ? 'mine' : ''}`;
-            div.innerHTML = `<img src="${m.avatar}" class="msg-avatar" title="${m.name}"><div>${!isMine ? `<div class="msg-name">${m.name}</div>` : ''}<div class="msg-bubble">${escapeHtml(m.text)}</div></div>`;
-            container.appendChild(div);
-        });
-        if(isChatOpen) scrollToBottom();
-    }
-
-    window.sendGlobalMessage = async () => {
-        const input = document.getElementById('gc-input');
-        const text = input.value.trim();
-        if(!text || !globalUser) return;
-        input.value = ''; 
-        try {
-            await addDoc(collection(db, "global_chat"), {
-                uid: globalUser.uid, name: globalUser.displayName, avatar: globalUser.photoURL, text: text, timestamp: serverTimestamp()
-            });
-            scrollToBottom();
-        } catch(e) { alert("ส่งไม่สำเร็จ"); }
-    };
-
-    window.handleChatEnter = (e) => { if(e.key === 'Enter') sendGlobalMessage(); };
-    function scrollToBottom() { const c = document.getElementById('gc-messages'); c.scrollTop = c.scrollHeight; }
-    function escapeHtml(text) { if(!text) return ""; return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-    function playNotificationSound() { try { const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2346/2346-preview.mp3"); audio.volume = 0.3; audio.play().catch(()=>{}); } catch(e){} }
+            return (val + 12) % 12; 
+        };
+        const pcs = [getPC(beat.s), getPC(beat.a), getPC(beat.t), getPC(beat.b)]; 
+        const uniq = [...new Set(pcs)].sort((a,b)=>a-b); 
+        let detectedRoot = -1; 
+        let quality = "maj"; 
+        for (let r of uniq) { const intervals = uniq.map(u => (u - r + 12) % 12).sort((a,b)=>a-b); if (intervals.includes(0) && intervals.includes(4) && intervals.includes(7)) { detectedRoot = r; quality="maj"; break; } if (intervals.includes(0) && intervals.includes(3) && intervals.includes(7)) { detectedRoot = r; quality="min"; break; } if (intervals.includes(0) && intervals.includes(3) && intervals.includes(6)) { detectedRoot = r; quality="dim"; break; } } if (detectedRoot === -1) detectedRoot = pcs[3]; const degree = (detectedRoot - keyInfo.root + 12) % 12; const romans = { 0: "I", 2: "ii", 4: "iii", 5: "IV", 7: "V", 9: "vi", 11: "vii°" }; let roman = romans[degree] || "?"; if (quality === "min" || quality === "dim") roman = roman.toLowerCase(); if (quality === "maj") roman = roman.toUpperCase(); if (quality === "dim" && !roman.includes("°")) roman += "°"; const bassVal = map[beat.b.n]; const diatonicMap = {c:0, d:1, e:2, f:3, g:4, a:5, b:6}; let figures = []; [beat.t, beat.a, beat.s].forEach(v => { const vDia = diatonicMap[v.n]; const bDia = diatonicMap[beat.b.n]; let interval = (vDia - bDia + 7) % 7 + 1; let acc = v.acc || ""; let show = false; if (acc) show = true; if (interval === 4 || interval === 2 || interval === 6 || interval === 7 || interval === 9) show = true; if (show && interval !== 1 && interval !== 8) { figures.push({val:interval, acc:acc}); } }); figures.sort((a,b) => b.val - a.val); figures = figures.filter((f, index, self) => index === self.findIndex((t) => (t.val === f.val && t.acc === f.acc)) ); let isRootPos = !figures.map(f=>f.val).includes(6) && !figures.map(f=>f.val).includes(4); const noteNames = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"]; return { name: noteNames[detectedRoot] + (quality==="min"?"m":quality==="dim"?"dim":""), roman: roman, figures: figures, isRootPos: isRootPos }; }
 </script>
 </body>
 </html>
